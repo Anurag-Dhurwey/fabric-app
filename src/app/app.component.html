@@ -1,0 +1,32 @@
+<style>
+  app-tool-bar{
+    position: absolute;
+    z-index: 10;
+    width: 100vw;
+    top: 0%;
+    left: 0%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    background: transparent;
+  }
+  main {
+    position: relative;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 100vh;
+    /* overflow: hidden; */
+  }
+  main > canvas {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+  }
+</style>
+<main class="main">
+  <app-tool-bar></app-tool-bar>
+  <app-board></app-board>
+</main>
+
