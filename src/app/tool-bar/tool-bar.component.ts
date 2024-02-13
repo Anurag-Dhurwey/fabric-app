@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { Actions } from '../../types/app.types';
 import { Store } from '@ngrx/store';
 import { appState } from '../store/reducers/state.reducer';
@@ -15,6 +15,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
+  @Output() toggleDrawingMode = new EventEmitter<boolean>();
   private store = inject(Store);
   app$: appState = {};
   constructor() {
@@ -29,6 +30,13 @@ export class ToolBarComponent {
     'pen',
   ];
   onClickActionButton(action: Actions) {
+    if (action === 'pencil') {
+      this.toggleDrawingMode.emit();
+      console.log("pencil")
+    }
     this.store.dispatch(setAction({ action }));
   }
+  // toggleDrawingMode(){
+
+  // }
 }

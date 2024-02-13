@@ -17,7 +17,6 @@
     left: 0%;
     width: 100vw;
     height: 100vh;
-    /* overflow: hidden; */
   }
   main > canvas {
     position: absolute;
@@ -26,7 +25,7 @@
   }
 </style>
 <main class="main">
-  <app-tool-bar></app-tool-bar>
-  <app-board></app-board>
+  <app-tool-bar (toggleDrawingMode)="togleDrawingMode()"></app-tool-bar>
+  <canvas id="canvas" ></canvas>
 </main>
 
