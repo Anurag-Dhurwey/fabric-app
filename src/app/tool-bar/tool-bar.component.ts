@@ -1,4 +1,10 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  inject,
+} from '@angular/core';
 import { Actions } from '../../types/app.types';
 import { Store } from '@ngrx/store';
 import { appState } from '../store/reducers/state.reducer';
@@ -15,9 +21,12 @@ import { AsyncPipe, CommonModule } from '@angular/common';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  @Output() toggleDrawingMode = new EventEmitter<boolean>();
+  @Input() canvas: fabric.Canvas | undefined;
+  // @Output() toggleDrawingMode = new EventEmitter<boolean>();
+  @Output() setCurrentAction = new EventEmitter<Actions>();
+  // @Output() observeAction = new EventEmitter<"action"|"objects">();
   private store = inject(Store);
-  app$: appState = {};
+  app$: appState |undefined;
   constructor() {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
@@ -30,13 +39,9 @@ export class ToolBarComponent {
     'pen',
   ];
   onClickActionButton(action: Actions) {
-    if (action === 'pencil') {
-      this.toggleDrawingMode.emit();
-      console.log("pencil")
-    }
-    this.store.dispatch(setAction({ action }));
+   this.setCurrentAction.emit(action)
   }
-  // toggleDrawingMode(){
-
-  // }
+  exportCanvasObjectsToJson() {
+    console.log(this.canvas?.toJSON());
+  }
 }

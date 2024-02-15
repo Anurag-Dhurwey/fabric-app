@@ -1,1 +1,13 @@
-export type Actions ='select' | 'pen' | 'line' | 'circle' | 'rectangle'|"pencil"
+export type Actions =
+  | 'select'
+  | 'pen'
+  | 'line'
+  | 'circle'
+  | 'rectangle'
+  | 'pencil';
+export type Object = (
+  | (fabric.Path & { isPathClosed?: boolean })
+  | fabric.Line
+  | fabric.Rect
+  | fabric.Circle
+) & { _id: string; _type?: 'line' | 'circle' | 'rectangle' | 'pencil' | 'pen' };

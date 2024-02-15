@@ -12,9 +12,11 @@
 
 @for (item of actions; track $index) {
 <button
-  [style.background-color]="app$.action == item ? '#73c7af' : ''"
+  [style.background-color]="app$?.action == item ? '#73c7af' : ''"
   (click)="onClickActionButton(item)"
 >
   {{ item }}
 </button>
 }
+
+<button (click)="exportCanvasObjectsToJson()">Eport</button>
