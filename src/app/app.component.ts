@@ -22,13 +22,18 @@ export class AppComponent implements OnInit {
   app$: appState | undefined;
   objects: Object[] = [];
   objectsObserver: Subscriber<'objects' | 'action'> | undefined;
-  tempRefObj: fabric.Line | undefined;
+  tempRefObj: (
+    | fabric.Line
+    | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
+  )[] = [];
   isDrawing: boolean = false;
   // currentObject:fabric.Object|undefined
   currentDrawingObject: Object | undefined;
   canvas: fabric.Canvas | undefined;
   isPathControlPointMoving: boolean = false;
-  // isCurrentDrawingPathClosed=false
+  pathPointToAdjust:
+    | { _refTo: fabric.Path; points: [number, number] }
+    | undefined;
   private store = inject(Store);
   constructor() {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
@@ -43,13 +48,36 @@ export class AppComponent implements OnInit {
 
     // this.canvas.on('mouse:over', (event) => console.log(event));
     this.canvas.on('mouse:down', (event) => this.onMouseDown(event));
+    this.canvas.on('mouse:dblclick', (event) => this.onMouseDoubleClick(event));
     this.canvas.on('mouse:move', (event) => this.onMouseMove(event));
     this.canvas.on('mouse:up', (event) => this.onMouseUp(event));
     this.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvas.on('object:moving', (event) => {
-      // console.log(event.target);
+      const target = event.target as
+        | (fabric.Circle & {
+            _refTo?: fabric.Path;
+            _refIndex?: [number, number];
+          })
+        | undefined;
+      if (target?._refTo?.path && target._refIndex) {
+        if (target._refIndex[1] === 1) {
+          const arr = target._refTo.path[
+            target._refIndex[0]
+          ] as unknown as number[];
+          arr[1] = event.pointer!.x
+          arr[2] = event.pointer!.y
+          console.log(arr[1],arr[2])
+        } else if (target._refIndex[1] === 2) {
+          const arr = target._refTo.path[
+            target._refIndex[0]
+          ] as unknown as number[];
+          arr[3] = event.pointer!.x
+          arr[4] = event.pointer!.y
+          console.log(arr[3],arr[4])
+        }
+      }
     });
     new Observable((observer) => {
       this.objectsObserver = observer;
@@ -71,14 +99,6 @@ export class AppComponent implements OnInit {
   // method could be 0 or 1
   // if 0 then object will replace last element of this.objects
   // if 1 then object will be pushed to this.objects
-  updateObjects(objects: Object, method: 0 | 1 = 1) {
-    if (method === 1) {
-      this.objects.push(objects);
-    } else if (method === 0) {
-      this.objects[this.objects.length - 1] = objects;
-    }
-    this.objectsObserver?.next('objects');
-  }
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvas) return;
@@ -109,9 +129,6 @@ export class AppComponent implements OnInit {
           event.pointer!.y,
         ]);
         this.updateObjects(this.currentDrawingObject, 0);
-        // this.store.dispatch(
-        //   setPenToolStep({ penToolStep: this.app$.penToolStep + 1 })
-        // );
       } else {
         const obj = this.createObjects(event, this.app$.action);
         if (obj) {
@@ -122,7 +139,48 @@ export class AppComponent implements OnInit {
       }
     }
   }
+  onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
+    console.log(event.target, ' ');
+    if (this.app$?.action === 'select' && event.target?.type === 'path') {
+      const path = event.target as fabric.Path & { _id: string };
+      // this.tempRefObj = [];
+      path.path?.forEach((points, i) => {
+        const arrPoint = points as unknown as number[];
+        let ctrlOne = new fabric.Circle({
+          left: Math.floor(arrPoint[1]),
+          top: Math.floor(arrPoint[2]),
+          radius: 5,
+          fill: 'blue',
+        }) as fabric.Circle & {
+          _refTo: fabric.Path;
+          _refIndex: [number, number];
+        };
 
+        ctrlOne._refTo = path;
+        ctrlOne._refIndex = [i, 1];
+        let ctrlTwo =
+          path.path &&
+          i < path.path?.length - 1 &&
+          arrPoint[3] &&
+          arrPoint[4] &&
+          (new fabric.Circle({
+            left: arrPoint[3],
+            top: arrPoint[4],
+            radius: 5,
+            fill: 'blue',
+          }) as unknown as fabric.Circle & {
+            _refTo: fabric.Path;
+            _refIndex: [number, number];
+          });
+        this.canvas?.add(ctrlOne);
+        if (ctrlTwo) {
+          ctrlTwo._refTo = path;
+          ctrlTwo._refIndex = [i, 2];
+          this.canvas?.add(ctrlTwo);
+        }
+      });
+    }
+  }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
     const obj = this.objects[this.objects.length - 1];
     if (!obj) return;
@@ -183,7 +241,7 @@ export class AppComponent implements OnInit {
 
       this.reRender();
       const start = pen.path[pen.path.length - 1] as unknown as number[];
-      this.tempRefObj = new fabric.Line(
+      this.tempRefObj[0] = new fabric.Line(
         [
           start[3] || start[1],
           start[4] || start[2],
@@ -195,7 +253,7 @@ export class AppComponent implements OnInit {
           strokeWidth: 1,
         }
       );
-      this.canvas?.add(this.tempRefObj);
+      this.canvas?.add(this.tempRefObj[0]);
     }
   }
 
@@ -211,6 +269,7 @@ export class AppComponent implements OnInit {
       ) {
         const penPath = this.currentDrawingObject as fabric.Path & {
           isPathClosed?: boolean;
+          _id: string;
         };
         const path = penPath.path as unknown as number[][];
 
@@ -218,17 +277,17 @@ export class AppComponent implements OnInit {
           Math.abs(path[0][1] - path[path.length - 1][3]) < 5 &&
           Math.abs(path[0][2] - path[path.length - 1][4]) < 5
         ) {
-          fabric.loadSVGFromString(penPath.toSVG(), (str) => {
-            this.updateObjects(str[0] as Object, 0);
-            this.currentDrawingObject = undefined;
-            this.setCurrentAction('select');
-          });
+          this.loadSVGFromString(penPath);
         }
       }
       // return;
     }
 
-    if (this.app$?.action !== 'pencil' && this.app$?.action !== 'pen') {
+    if (
+      this.app$?.action !== 'pencil' &&
+      this.app$?.action !== 'select' &&
+      this.app$?.action !== 'pen'
+    ) {
       this.currentDrawingObject = undefined;
       this.setCurrentAction('select');
     }
@@ -287,6 +346,11 @@ export class AppComponent implements OnInit {
   setCurrentAction(action: Actions) {
     if (!this.canvas) return;
     this.store.dispatch(setAction({ action }));
+    if (this.currentDrawingObject?.type === 'path') {
+      this.loadSVGFromString(this.currentDrawingObject);
+    }
+    this.currentDrawingObject = undefined;
+    this.reRender();
     if (action === 'pencil') {
       this.canvas.isDrawingMode = true;
     } else {
@@ -306,5 +370,21 @@ export class AppComponent implements OnInit {
       object.evented = arg;
     });
     this.canvas?.renderAll();
+  }
+
+  loadSVGFromString(data: Object) {
+    fabric.loadSVGFromString(data.toSVG(), (str) => {
+      this.updateObjects(str[0] as Object, 0);
+      this.currentDrawingObject = undefined;
+      this.setCurrentAction('select');
+    });
+  }
+  updateObjects(objects: Object, method: 0 | 1 = 1) {
+    if (method === 1) {
+      this.objects.push(objects);
+    } else if (method === 0) {
+      this.objects[this.objects.length - 1] = objects;
+    }
+    this.objectsObserver?.next('objects');
   }
 }
