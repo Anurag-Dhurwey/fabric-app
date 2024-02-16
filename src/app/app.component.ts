@@ -57,25 +57,23 @@ export class AppComponent implements OnInit {
     this.canvas.on('object:moving', (event) => {
       const target = event.target as
         | (fabric.Circle & {
-            _refTo?: fabric.Path;
+            _refTo?: fabric.Path & { _id: string };
             _refIndex?: [number, number];
           })
         | undefined;
       if (target?._refTo?.path && target._refIndex) {
         if (target._refIndex[1] === 1) {
-          const arr = target._refTo.path[
-            target._refIndex[0]
-          ] as unknown as number[];
-          arr[1] = event.pointer!.x
-          arr[2] = event.pointer!.y
-          console.log(arr[1],arr[2])
+          // const ref = target._refTo;
+          // const arr = ref.path![target._refIndex[0]] as unknown as number[];
+          // arr[1] = event.pointer!.x;
+          // arr[2] = event.pointer!.y;
+          // this.updateObjects(ref, 'replace');
         } else if (target._refIndex[1] === 2) {
-          const arr = target._refTo.path[
-            target._refIndex[0]
-          ] as unknown as number[];
-          arr[3] = event.pointer!.x
-          arr[4] = event.pointer!.y
-          console.log(arr[3],arr[4])
+          // const ref = target._refTo;
+          // const arr = ref.path![target._refIndex[0]] as unknown as number[];
+          // arr[3] = event.pointer!.x;
+          // arr[4] = event.pointer!.y;
+          // this.updateObjects(ref, 'replace');
         }
       }
     });
@@ -92,6 +90,9 @@ export class AppComponent implements OnInit {
     this.canvas?.clear();
     this.objects.forEach((obj) => {
       this.canvas?.add(obj);
+    });
+    this.tempRefObj?.forEach((ref) => {
+      this.canvas?.add(ref);
     });
   }
 
@@ -128,7 +129,7 @@ export class AppComponent implements OnInit {
           event.pointer!.x,
           event.pointer!.y,
         ]);
-        this.updateObjects(this.currentDrawingObject, 0);
+        this.updateObjects(this.currentDrawingObject, 'popAndPush');
       } else {
         const obj = this.createObjects(event, this.app$.action);
         if (obj) {
@@ -143,7 +144,7 @@ export class AppComponent implements OnInit {
     console.log(event.target, ' ');
     if (this.app$?.action === 'select' && event.target?.type === 'path') {
       const path = event.target as fabric.Path & { _id: string };
-      // this.tempRefObj = [];
+      this.tempRefObj = [];
       path.path?.forEach((points, i) => {
         const arrPoint = points as unknown as number[];
         let ctrlOne = new fabric.Circle({
@@ -173,10 +174,12 @@ export class AppComponent implements OnInit {
             _refIndex: [number, number];
           });
         this.canvas?.add(ctrlOne);
+        this.tempRefObj.push(ctrlOne as any);
         if (ctrlTwo) {
           ctrlTwo._refTo = path;
           ctrlTwo._refIndex = [i, 2];
           this.canvas?.add(ctrlTwo);
+          this.tempRefObj.push(ctrlTwo as any);
         }
       });
     }
@@ -227,7 +230,7 @@ export class AppComponent implements OnInit {
         default:
           break;
       }
-      this.updateObjects(obj, 0);
+      this.updateObjects(obj, 'popAndPush');
     }
     if (
       this.app$?.action === 'pen' &&
@@ -361,6 +364,7 @@ export class AppComponent implements OnInit {
     } else {
       this.objectCustomization(false);
     }
+    this.tempRefObj = [];
   }
 
   objectCustomization(arg: boolean) {
@@ -374,16 +378,29 @@ export class AppComponent implements OnInit {
 
   loadSVGFromString(data: Object) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
-      this.updateObjects(str[0] as Object, 0);
+      const newPath = str[0] as Object;
+      newPath._id = uuidv4();
+      this.updateObjects(newPath, 'popAndPush');
       this.currentDrawingObject = undefined;
       this.setCurrentAction('select');
     });
   }
-  updateObjects(objects: Object, method: 0 | 1 = 1) {
-    if (method === 1) {
-      this.objects.push(objects);
-    } else if (method === 0) {
-      this.objects[this.objects.length - 1] = objects;
+  updateObjects(
+    object: Object,
+    method: 'push' | 'popAndPush' | 'replace' = 'push'
+  ) {
+    if (method === 'push') {
+      this.objects.push(object);
+    } else if (method === 'popAndPush') {
+      this.objects[this.objects.length - 1] = object;
+    } else if (method === 'replace') {
+      this.objects = this.objects.map((obj) => {
+        if (object._id === obj._id) {
+          console.log('got');
+          return object;
+        }
+        return obj;
+      });
     }
     this.objectsObserver?.next('objects');
   }
