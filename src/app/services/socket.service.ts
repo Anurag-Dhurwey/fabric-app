@@ -6,9 +6,11 @@ import { io, Socket } from 'socket.io-client';
   providedIn: 'root',
 })
 export class SocketService {
-   socket: Socket|undefined;
+  socket: Socket | undefined;
 
-  constructor() {
+  constructor() {}
+
+  connect() {
     this.socket = io('http://localhost:4000'); // Change the URL to your Socket.IO server
   }
 
@@ -18,7 +20,7 @@ export class SocketService {
   }
 
   // Listen for events from the server
-  on(event: string, callback: (data:any) => void) {
+  on(event: string, callback: (data: any) => void) {
     this.socket?.on(event, callback);
   }
 }

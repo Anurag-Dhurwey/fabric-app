@@ -44,6 +44,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.socketService.connect();
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
@@ -59,6 +60,11 @@ export class AppComponent implements OnInit {
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvas.on('object:moving', (event) => {
+      this.socketService.emit(
+        'objects:modified',
+        this.canvas?.toObject().objects
+      );
+
       const target = event.target as
         | (fabric.Circle & {
             _refTo?: fabric.Path & { _id: string };
@@ -91,26 +97,29 @@ export class AppComponent implements OnInit {
     });
 
     this.socketService.on('objects:modified', (new_objects) => {
-      console.log({ new_objects });
+      this.initializeObjcts(new_objects);
+      console.log('modi');
     });
 
     this.socketService.on('objects', (objects) => {
-      console.log({ objects });
+      this.initializeObjcts(objects);
+      console.log('got objects');
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
       this.presense = data;
     });
   }
 
-  socketHandahske() {
-    if (this.socketService.socket?.connected) {
-      this.socketService.emit('test', { time: 'ttt' });
-      console.log('sent');
-    } else {
-      console.log('no-connection-with-socket');
-    }
+  initializeObjcts(objects: any[]) {
+    fabric.util.enlivenObjects(
+      objects,
+      (createdObjs: Object[]) => {
+        this.objects = createdObjs;
+        this.reRender();
+      },
+      'fabric'
+    );
   }
-
   renderObjectsOnCanvas() {
     this.canvas?.clear();
     this.objects.forEach((obj) => {
@@ -393,7 +402,6 @@ export class AppComponent implements OnInit {
       this.objectCustomization(false);
     }
     this.tempRefObj = [];
-    this.socketHandahske();
   }
 
   objectCustomization(arg: boolean) {
@@ -415,14 +423,18 @@ export class AppComponent implements OnInit {
     });
   }
   updateObjects(
-    object: Object,
-    method: 'push' | 'popAndPush' | 'replace' = 'push'
+    object: Object | Object[],
+    method: 'push' | 'replaceAll' | 'popAndPush' | 'replace' = 'push'
   ) {
-    if (method === 'push') {
+    if (method === 'replaceAll' && Array.isArray(object)) {
+      this.objects = object;
+    }
+
+    if (method === 'push' && !Array.isArray(object)) {
       this.objects.push(object);
-    } else if (method === 'popAndPush') {
+    } else if (method === 'popAndPush' && !Array.isArray(object)) {
       this.objects[this.objects.length - 1] = object;
-    } else if (method === 'replace') {
+    } else if (method === 'replace' && !Array.isArray(object)) {
       this.objects = this.objects.map((obj) => {
         if (object._id === obj._id) {
           console.log('got');
@@ -432,5 +444,9 @@ export class AppComponent implements OnInit {
       });
     }
     this.objectsObserver?.next('objects');
+    this.socketService.emit(
+      'objects:modified',
+      this.canvas?.toObject().objects
+    );
   }
 }
