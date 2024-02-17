@@ -1,5 +1,5 @@
 <style>
-  app-tool-bar{
+  app-tool-bar {
     position: absolute;
     z-index: 10;
     width: 100vw;
@@ -23,9 +23,21 @@
     top: 0%;
     left: 0%;
   }
+  main > #mouse {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    background-color: aqua;
+    z-index: 10;
+  }
 </style>
 <main class="main">
-  <app-tool-bar [canvas]="canvas" (setCurrentAction)="setCurrentAction($event)"></app-tool-bar>
-  <canvas id="canvas" ></canvas>
+  <app-tool-bar
+    [canvas]="canvas"
+    (setCurrentAction)="setCurrentAction($event)"
+  ></app-tool-bar>
+  <canvas id="canvas"></canvas>
+ @for (item of presense; track $index) {
+  <div [style]="{top:item.mouse.y+'px',left:item.mouse.x+'px'}" id="mouse"></div>
+ }
 </main>
-

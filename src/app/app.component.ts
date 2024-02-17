@@ -1,19 +1,20 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToolBarComponent } from './tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
 import { appState } from './store/reducers/state.reducer';
-import { setAction, setPenToolStep } from './store/actions/state.action';
-import { Actions, Object } from '../types/app.types';
+import { setAction } from './store/actions/state.action';
+import { Actions, Object, Presense } from '../types/app.types';
 import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import { SocketService } from './services/socket.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToolBarComponent, AsyncPipe],
+  imports: [CommonModule, RouterOutlet, ToolBarComponent, AsyncPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit {
     | fabric.Line
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
   )[] = [];
+  presense: Presense[] = [];
   isDrawing: boolean = false;
   // currentObject:fabric.Object|undefined
   currentDrawingObject: Object | undefined;
@@ -35,7 +37,9 @@ export class AppComponent implements OnInit {
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
   private store = inject(Store);
-  constructor() {
+  // private test=inject(TestService)
+
+  constructor(private socketService: SocketService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
@@ -85,7 +89,28 @@ export class AppComponent implements OnInit {
       } else if ('action') {
       }
     });
+
+    this.socketService.on('objects:modified', (new_objects) => {
+      console.log({ new_objects });
+    });
+
+    this.socketService.on('objects', (objects) => {
+      console.log({ objects });
+    });
+    this.socketService.on('mouse:move', (data: Presense[]) => {
+      this.presense = data;
+    });
   }
+
+  socketHandahske() {
+    if (this.socketService.socket?.connected) {
+      this.socketService.emit('test', { time: 'ttt' });
+      console.log('sent');
+    } else {
+      console.log('no-connection-with-socket');
+    }
+  }
+
   renderObjectsOnCanvas() {
     this.canvas?.clear();
     this.objects.forEach((obj) => {
@@ -141,7 +166,6 @@ export class AppComponent implements OnInit {
     }
   }
   onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
-    console.log(event.target, ' ');
     if (this.app$?.action === 'select' && event.target?.type === 'path') {
       const path = event.target as fabric.Path & { _id: string };
       this.tempRefObj = [];
@@ -185,6 +209,10 @@ export class AppComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
+    this.socketService.emit('mouse:move', {
+      x: event.pointer?.x,
+      y: event.pointer?.y,
+    });
     const obj = this.objects[this.objects.length - 1];
     if (!obj) return;
     if (
@@ -303,7 +331,7 @@ export class AppComponent implements OnInit {
     this.updateObjects(path);
   }
   reRender() {
-    this.objectsObserver?.next();
+    this.objectsObserver?.next('objects');
   }
   createObjects(e: fabric.IEvent<MouseEvent>, action: Actions) {
     if (!e.pointer) return;
@@ -365,6 +393,7 @@ export class AppComponent implements OnInit {
       this.objectCustomization(false);
     }
     this.tempRefObj = [];
+    this.socketHandahske();
   }
 
   objectCustomization(arg: boolean) {
