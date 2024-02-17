@@ -103,11 +103,13 @@ export class AppComponent implements OnInit {
 
     this.socketService.on('objects', (objects) => {
       this.initializeObjcts(objects);
-      console.log('got objects');
+      // console.log('got objects',objects);
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
       this.presense = data;
     });
+
+    this.socketService.emit("objects",{})
   }
 
   initializeObjcts(objects: any[]) {
