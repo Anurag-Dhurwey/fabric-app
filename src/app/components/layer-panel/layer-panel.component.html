@@ -1,0 +1,44 @@
+<style>
+  div {
+    margin: 0px 4px;
+    padding: 5px 0px;
+    border-radius: 10px;
+    background-color: rgb(162, 160, 160);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 20px;
+    min-height: 20px;
+  }
+
+  div > span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 5px;
+  }
+  div > span > button {
+    font-size: medium;
+    background: none;
+    outline: none;
+    border: none;
+    cursor: pointer;
+  }
+</style>
+@for (obj of objects; track $index) {
+<div>
+  <span style="width: 75%">{{ obj.type }}</span>
+  <span style="width: 25%">
+    <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
+      {{ obj.visible ? "visibility " : " visibility_off" }}
+    </button>
+    <button
+      class="material-symbols-outlined"
+      (click)="toggleControllability(obj)"
+    >
+      {{ obj.selectable ? "lock_open_right" : "lock" }}
+    </button>
+  </span>
+</div>
+}

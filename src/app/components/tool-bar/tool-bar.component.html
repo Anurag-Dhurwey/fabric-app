@@ -1,0 +1,84 @@
+<style>
+  div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 7px;
+  }
+  button {
+    font-size: larger;
+    padding: 3px 6px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  div > #importBtn {
+    transform: rotate(180deg);
+  }
+  #setting {
+    position: relative;
+  }
+  #settingPanel {
+    list-style: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    min-height: 400px;
+    min-width: 200px;
+    background-color: gray;
+    border-radius: 10px;
+  }
+  #settingPanel>li{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    column-gap: 7px;
+  }
+</style>
+
+<div>
+  @for (role of roles; track $index) {
+  <button
+    class="material-symbols-outlined"
+    [style.background-color]="app$?.action == role.role ? '#73c7af' : ''"
+    (click)="onClickActionButton(role.role)"
+  >
+    {{ role.icon }}
+  </button>
+  }
+</div>
+
+<div>
+  <button
+    class="material-symbols-outlined"
+    (click)="exportCanvasObjectsToJson()"
+  >
+    ios_share
+  </button>
+  <button
+    id="importBtn"
+    class="material-symbols-outlined"
+    (click)="exportCanvasObjectsToJson()"
+  >
+    ios_share
+  </button>
+</div>
+<div id="setting">
+  <button class="material-symbols-outlined" (click)="toggleSetting(true)">
+    settings_b_roll
+  </button>
+  <ul
+    id="settingPanel"
+    [style]="{ display: setting ? 'block' : 'none' }"
+    >
+    <!-- (mouseleave)="toggleSetting(false)" -->
+
+<li>
+  <label for="background-color">Background-color</label>
+  <input (input)="setCanvasBackground(($any($event.target)).value)" type="color" name="" id="background-color">
+</li>
+</ul>
+</div>

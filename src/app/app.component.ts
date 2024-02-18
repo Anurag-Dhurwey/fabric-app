@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ToolBarComponent } from './tool-bar/tool-bar.component';
+import { ToolBarComponent } from './components/tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
@@ -11,10 +11,11 @@ import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { SocketService } from './services/socket.service';
+import { LayerPanelComponent } from './components/layer-panel/layer-panel.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ToolBarComponent, AsyncPipe],
+  imports: [CommonModule, RouterOutlet, ToolBarComponent, LayerPanelComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -29,7 +30,6 @@ export class AppComponent implements OnInit {
   )[] = [];
   presense: Presense[] = [];
   isDrawing: boolean = false;
-  // currentObject:fabric.Object|undefined
   currentDrawingObject: Object | undefined;
   canvas: fabric.Canvas | undefined;
   isPathControlPointMoving: boolean = false;
@@ -37,7 +37,6 @@ export class AppComponent implements OnInit {
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
   private store = inject(Store);
-  // private test=inject(TestService)
 
   constructor(private socketService: SocketService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
@@ -48,7 +47,9 @@ export class AppComponent implements OnInit {
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
-    this.canvas = new fabric.Canvas(board);
+    this.canvas = new fabric.Canvas(board, {
+      backgroundColor: this.app$?.canvasConfig.backgroungColor,
+    });
     window.addEventListener('resize', () => {
       board.width = window.innerWidth;
       board.height = window.innerHeight;
@@ -126,6 +127,10 @@ export class AppComponent implements OnInit {
   }
   renderObjectsOnCanvas() {
     this.canvas?.clear();
+    this.canvas?.setBackgroundColor(
+      this.app$?.canvasConfig.backgroungColor || '#282829',
+      () => {}
+    );
     this.objects.forEach((obj) => {
       this.canvas?.add(obj);
     });
@@ -345,6 +350,7 @@ export class AppComponent implements OnInit {
   }
   reRender() {
     this.objectsObserver?.next('objects');
+    console.log('re');
   }
   createObjects(e: fabric.IEvent<MouseEvent>, action: Roles) {
     if (!e.pointer) return;
