@@ -22,20 +22,36 @@
     position: relative;
   }
   #settingPanel {
-    list-style: none;
+    padding: 0px 5px;
     position: absolute;
     top: 0px;
     left: 0px;
+    width: 250ox;
     min-height: 400px;
     min-width: 200px;
     background-color: gray;
     border-radius: 10px;
   }
-  #settingPanel>li{
+  #settingPanel > div {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
-    column-gap: 7px;
+    column-gap: 0px;
+    width: 100%;
+    border-bottom: 2px solid black;
+    padding: 10px 0px;
+  }
+  #settingPanel > div > span {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #settingPanel > div > span > input {
+    width: 25px;
+    height: 25px;
+    border: 1px;
+    border-radius: 5px;
   }
 </style>
 
@@ -70,15 +86,31 @@
   <button class="material-symbols-outlined" (click)="toggleSetting(true)">
     settings_b_roll
   </button>
-  <ul
-    id="settingPanel"
-    [style]="{ display: setting ? 'block' : 'none' }"
-    >
-    <!-- (mouseleave)="toggleSetting(false)" -->
-
-<li>
-  <label for="background-color">Background-color</label>
-  <input (input)="setCanvasBackground(($any($event.target)).value)" type="color" name="" id="background-color">
-</li>
-</ul>
+  <div id="settingPanel" [style]="{ display: setting ? 'block' : 'none' }">
+    <div>
+      <span style="width: 15%">
+        <button
+          style="font-size: small"
+          (click)="toggleSetting(false)"
+          class="material-symbols-outlined"
+        >
+          close
+        </button></span
+      >
+      <span style="width: 85%; justify-content: center">Configration</span>
+    </div>
+    <div>
+      <span>
+        <label for="background-color">Background</label>
+      </span>
+      <span>
+        <input
+          (input)="setCanvasBackground($any($event.target).value)"
+          type="color"
+          name=""
+          id="background-color"
+        />
+      </span>
+    </div>
+  </div>
 </div>
