@@ -1,4 +1,4 @@
-export type Actions =
+export type Roles =
   | 'select'
   | 'pen'
   | 'line'

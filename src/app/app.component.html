@@ -1,22 +1,27 @@
 <style>
-  app-tool-bar {
-    position: absolute;
-    z-index: 10;
-    width: 100vw;
-    top: 0%;
-    left: 0%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    column-gap: 10px;
-    background: transparent;
-  }
   main {
     position: relative;
     top: 0%;
     left: 0%;
     width: 100vw;
     height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  app-tool-bar {
+    position: fixed;
+    margin-top: 5px;
+    z-index: 10;
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    background-color: gray;
+    padding: 5px 20px;
+    border-radius: 10px;
   }
   main > canvas {
     position: absolute;
@@ -37,7 +42,10 @@
     (setCurrentAction)="setCurrentAction($event)"
   ></app-tool-bar>
   <canvas id="canvas"></canvas>
- @for (item of presense; track $index) {
-  <div [style]="{top:item.mouse.y+'px',left:item.mouse.x+'px'}" id="mouse"></div>
- }
+  @for (item of presense; track $index) {
+  <div
+    [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"
+    id="mouse"
+  ></div>
+  }
 </main>

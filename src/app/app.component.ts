@@ -5,8 +5,8 @@ import { Store } from '@ngrx/store';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
 import { appState } from './store/reducers/state.reducer';
-import { setAction } from './store/actions/state.action';
-import { Actions, Object, Presense } from '../types/app.types';
+import { setRole } from './store/actions/state.action';
+import { Roles, Object, Presense } from '../types/app.types';
 import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -44,13 +44,17 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.socketService.connect();
+    // this.socketService.connect();
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
-
     this.canvas = new fabric.Canvas(board);
-
+    window.addEventListener('resize', () => {
+      board.width = window.innerWidth;
+      board.height = window.innerHeight;
+      this.canvas?.setHeight(window.innerHeight);
+      this.canvas?.setWidth(window.innerWidth);
+    });
     // this.canvas.on('mouse:over', (event) => console.log(event));
     this.canvas.on('mouse:down', (event) => this.onMouseDown(event));
     this.canvas.on('mouse:dblclick', (event) => this.onMouseDoubleClick(event));
@@ -98,18 +102,16 @@ export class AppComponent implements OnInit {
 
     this.socketService.on('objects:modified', (new_objects) => {
       this.initializeObjcts(new_objects);
-      console.log('modi');
     });
 
     this.socketService.on('objects', (objects) => {
       this.initializeObjcts(objects);
-      // console.log('got objects',objects);
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
       this.presense = data;
     });
 
-    this.socketService.emit("objects",{})
+    this.socketService.emit('objects', {});
   }
 
   initializeObjcts(objects: any[]) {
@@ -344,7 +346,7 @@ export class AppComponent implements OnInit {
   reRender() {
     this.objectsObserver?.next('objects');
   }
-  createObjects(e: fabric.IEvent<MouseEvent>, action: Actions) {
+  createObjects(e: fabric.IEvent<MouseEvent>, action: Roles) {
     if (!e.pointer) return;
     const { x, y } = e.pointer;
     if (action === 'line') {
@@ -385,9 +387,9 @@ export class AppComponent implements OnInit {
     }
   }
 
-  setCurrentAction(action: Actions) {
+  setCurrentAction(action: Roles) {
     if (!this.canvas) return;
-    this.store.dispatch(setAction({ action }));
+    this.store.dispatch(setRole({ action }));
     if (this.currentDrawingObject?.type === 'path') {
       this.loadSVGFromString(this.currentDrawingObject);
     }

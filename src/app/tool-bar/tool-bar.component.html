@@ -2,21 +2,24 @@
   button {
     padding: 3px 6px;
     border-radius: 5px;
-    font-size: x-large;
-    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   button:hover {
     cursor: pointer;
   }
 </style>
 
-@for (item of actions; track $index) {
+@for (role of roles; track $index) {
 <button
-  [style.background-color]="app$?.action == item ? '#73c7af' : ''"
-  (click)="onClickActionButton(item)"
+  [style.background-color]="app$?.action == role.role ? '#73c7af' : ''"
+  (click)="onClickActionButton(role.role)"
 >
-  {{ item }}
+  <span class="material-symbols-outlined"> {{ role.icon }} </span>
 </button>
 }
 
-<button (click)="exportCanvasObjectsToJson()">Eport</button>
+<button (click)="exportCanvasObjectsToJson()">
+  <span class="material-symbols-outlined"> ios_share </span>
+</button>
