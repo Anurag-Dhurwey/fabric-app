@@ -99,6 +99,7 @@ export class AppComponent implements OnInit {
         }
       }
     });
+
     new Observable((observer) => {
       this.objectsObserver = observer;
     })?.subscribe((arg) => {

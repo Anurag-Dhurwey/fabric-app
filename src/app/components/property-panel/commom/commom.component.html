@@ -27,9 +27,7 @@
   .propertyCard span input {
     width: 50px;
     font-size: x-small;
-    /* border: none; */
     text-align: center;
-    /* background-color: ; */
     background: none;
   }
 
@@ -45,7 +43,7 @@
 
 @for (common of commonData; track $index) {
 <div class="propertyCard">
-  <h6>{{ common.title }}</h6>
+  <h6 style="margin:4px 0px;">{{ common.title }}</h6>
   <div>
     @for (key of common.keys; track $index) {
     <span>

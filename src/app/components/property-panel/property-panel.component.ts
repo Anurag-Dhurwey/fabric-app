@@ -13,13 +13,17 @@ export class PropertyPanelComponent {
   @Input() canvas: fabric.Canvas | undefined;
   @Input() objects: Object[] | undefined;
   @Output() reRender = new EventEmitter<any>();
-  // selectedObj: fabric.Object | undefined | null;
+  selectedObj: fabric.Object[] | undefined | null;
   constructor() {
-    // this.selectedObj = this.canvas?.getActiveObject();
+     
   }
-
-  selectedObj(){
-    return this.canvas?.getActiveObject()
+  ngAfterViewInit(){
+    this.canvas?.on('selection:created', (event) => {
+      this.selectedObj=event.selected
+    });
+    this.canvas?.on('selection:cleared', (event) => {
+      this.selectedObj=null
+    });
   }
 
 }
