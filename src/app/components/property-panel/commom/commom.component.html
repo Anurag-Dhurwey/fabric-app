@@ -8,17 +8,26 @@
   .propertyCard > div {
     width: 100%;
     height: fit-content;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .propertyCard > div > span {
+    width: 49%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-
-  .propertyCard button {
+  /* .propertyCard button {
     font-size: larger;
     background: none;
     border: none;
     display: flex;
     justify-content: center;
     align-items: center;
-  }
+  } */
 
   .propertyCard span label {
     font-size: small;
@@ -26,37 +35,47 @@
 
   .propertyCard span input {
     width: 50px;
-    font-size: x-small;
     text-align: center;
     background: none;
+    outline: none;
+    border: none;
+    font-size: small;
+    font-weight: bold;
   }
 
   .color_box {
-    width: 25px !important;
-    height: 25px;
+    width: 20px !important;
+    height: 20px !important;
     border-radius: 2px;
-    border: 1px;
-    background: transparent;
+    background:silver !important;
+    padding: 2px;
     overflow: hidden;
   }
 </style>
 
 @for (common of commonData; track $index) {
 <div class="propertyCard">
-  <h6 style="margin:4px 0px;">{{ common.title }}</h6>
+  <h6 style="margin: 4px 0px">{{ common.title }}</h6>
   <div>
-    @for (key of common.keys; track $index) {
+    @if(objects.length){ @for (key of common.keys; track $index) {
     <span>
       <label [for]="key.key">
         {{ key.lable }}
       </label>
       <input
+        [max]="key.max"
+        [min]="key.min"
+        [step]="key.step"
         [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
         [type]="key.inputBox_type"
         [name]="key.key"
+        [id]="key.key"
+        (change)="onChange($event)"
+        [value]="objects[0][key.key]"
+        [checked]="objects[0][key.key]"
       />
     </span>
-    }
+    } }
   </div>
 </div>
 }

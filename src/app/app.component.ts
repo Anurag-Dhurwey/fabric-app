@@ -312,7 +312,7 @@ export class AppComponent implements OnInit {
             event.pointer!.y,
           ],
           {
-            stroke: 'gray',
+            stroke: '#81868a',
             strokeWidth: 1,
           }
         )
@@ -366,6 +366,10 @@ export class AppComponent implements OnInit {
     this.updateObjects(path);
   }
   reRender() {
+    this.socketService.emit(
+      'objects:modified',
+      this.canvas?.toObject().objects
+    );
     this.objectsObserver?.next('objects');
   }
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
@@ -373,14 +377,14 @@ export class AppComponent implements OnInit {
     const { x, y } = e.pointer;
     if (role === 'line') {
       return new fabric.Line([x, y, x, y], {
-        stroke: 'gray',
-        strokeWidth: 5,
+        stroke: '#81868a',
       }) as Object;
     } else if (role === 'rectangle') {
       return new fabric.Rect({
         top: e.pointer?.y,
         left: e.pointer?.x,
-        fill: 'red',
+        fill: '',
+        stroke: '#81868a',
         width: 0,
         height: 0,
       }) as Object;
@@ -391,7 +395,7 @@ export class AppComponent implements OnInit {
         originX: 'center',
         originY: 'center',
         radius: 0,
-        stroke: 'gray',
+        stroke: '#81868a',
         fill: '',
       }) as Object;
     } else if (role === 'pen') {
@@ -408,8 +412,8 @@ export class AppComponent implements OnInit {
       const text = new fabric.IText('', {
         top: e.pointer.y,
         left: e.pointer.x,
-        stroke: 'gray',
-        fill: 'gray',
+        stroke: '#81868a',
+        fill: '#81868a',
         editable: true,
       });
       return text as Object;
@@ -478,10 +482,5 @@ export class AppComponent implements OnInit {
       });
     }
     this.reRender();
-  //  !Array.isArray(object) &&this.canvas?.setActiveObject(object)
-    this.socketService.emit(
-      'objects:modified',
-      this.canvas?.toObject().objects
-    );
   }
 }

@@ -26,10 +26,15 @@ export type TextArea = {
   value: string;
 };
 
-
-
-
-export type CommonProperty={
-  title:string,
-  keys:{lable:string,key:string,val_type:string,inputBox_type:string}[]
-}
+export type CommonProperty = {
+  title: string;
+  keys: {
+    lable: string;
+    key: keyof fabric.Object;
+    val_type: string;
+    inputBox_type: string;
+    min?: number;
+    max?: number;
+    step?: number;
+  }[];
+};

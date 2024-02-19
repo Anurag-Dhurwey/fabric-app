@@ -24,12 +24,16 @@
 </style>
 
 <div class="propertyBar">
-  @if(selectedObj?.length){
-  <h4 style="margin: 0px;">
+  @if(selectedObj.length){
+  <h4 style="margin: 0px">
     @for (item of selectedObj; track $index) {
-    <span style="padding: 0px 5px;">{{ item.type }}</span>
+    <span style="padding: 0px 5px">{{ item.type }}</span>
     }
   </h4>
-  <app-commom />
+  <app-commom
+    [canvas]="canvas"
+    [objects]="selectedObj"
+    (reRender)="reRender.emit()"
+  />
   }
 </div>
