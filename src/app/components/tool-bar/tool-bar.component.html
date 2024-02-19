@@ -52,6 +52,7 @@
     height: 25px;
     border: 1px;
     border-radius: 5px;
+    background: transparent;
   }
 </style>
 
@@ -59,13 +60,22 @@
   @for (role of roles; track $index) {
   <button
     class="material-symbols-outlined"
-    [style.background-color]="app$?.action == role.role ? '#73c7af' : ''"
+    [style.background-color]="app$?.role == role.role ? '#73c7af' : ''"
     (click)="onClickActionButton(role.role)"
   >
     {{ role.icon }}
   </button>
   }
 </div>
+
+
+<!-- this input will be trigger when user click on image role button  -->
+<input
+  type="file"
+  #fileInput
+  style="display: none;"
+  (change)="onImageInput(fileInput.files)"
+/>
 
 <div>
   <button

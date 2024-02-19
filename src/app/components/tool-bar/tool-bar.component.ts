@@ -1,14 +1,25 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { Roles } from '../../../types/app.types';
 import { Store } from '@ngrx/store';
 import { appState } from '../../store/reducers/state.reducer';
 import { appSelector } from '../../store/selectors/app.selector';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { Object } from '../../../types/app.types';
+import { v4 as uuidv4 } from 'uuid';
 import {
   setCanvasConfig,
   setCanvasConfigProp,
 } from '../../store/actions/state.action';
+import { fabric } from 'fabric';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
@@ -20,9 +31,14 @@ export class ToolBarComponent {
   @Input() canvas: fabric.Canvas | undefined;
   @Output() setCurrentAction = new EventEmitter<Roles>();
   @Output() reRender = new EventEmitter<any>();
+  @Output() updateObjects = new EventEmitter<{
+    object: Object | Object[];
+    method?: 'push';
+  }>();
   private store = inject(Store);
   app$: appState | undefined;
   setting: boolean = false;
+  @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
   constructor() {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
@@ -33,9 +49,31 @@ export class ToolBarComponent {
     { role: 'rectangle', icon: 'crop_3_2' },
     { role: 'pencil', icon: 'edit' },
     { role: 'pen', icon: 'ink_pen' },
+    { role: 'text', icon: 'text_fields' },
+    { role: 'image', icon: 'image' },
   ];
+
+  onImageInput(files: FileList | null) {
+    if (files && files.length) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        typeof reader.result === 'string' &&
+          fabric.Image?.fromURL(reader.result, (imgObj) => {
+            const object = imgObj as Object;
+            object._id = uuidv4();
+            this.updateObjects.emit({ object, method: 'push' });
+          });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   onClickActionButton(role: Roles) {
     this.setCurrentAction.emit(role);
+    if (role === 'image') {
+      this.fileInput?.nativeElement.click();
+    }
   }
   exportCanvasObjectsToJson() {
     console.log(this.canvas?.toJSON());
@@ -52,6 +90,6 @@ export class ToolBarComponent {
     this.store.dispatch(setCanvasConfig(data));
     data.backgroungColor &&
       this.canvas?.setBackgroundColor(data.backgroungColor, () => {});
-      this.canvas?.renderAll()
+    this.canvas?.renderAll();
   }
 }

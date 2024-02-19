@@ -5,7 +5,7 @@ import { Roles } from '../../../types/app.types';
 
 export const setRole = createAction(
   '[Action Component] setRole',
-  props<{ action: Roles }>()
+  props<{ role: Roles }>()
 );
 
 export type setCanvasConfigProp ={ backgroungColor?: string; width?: number; height?: number }

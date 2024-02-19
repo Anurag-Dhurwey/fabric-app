@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToolBarComponent } from './components/tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
@@ -6,16 +6,23 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
 import { appState } from './store/reducers/state.reducer';
 import { setRole } from './store/actions/state.action';
-import { Roles, Object, Presense } from '../types/app.types';
+import { Roles, Object, Presense, TextArea } from '../types/app.types';
 import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { SocketService } from './services/socket.service';
 import { LayerPanelComponent } from './components/layer-panel/layer-panel.component';
+import { PropertyPanelComponent } from './components/property-panel/property-panel.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ToolBarComponent, LayerPanelComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    ToolBarComponent,
+    LayerPanelComponent,
+    PropertyPanelComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -23,7 +30,7 @@ export class AppComponent implements OnInit {
   title = 'fabric app';
   app$: appState | undefined;
   objects: Object[] = [];
-  objectsObserver: Subscriber<'objects' | 'action'> | undefined;
+  objectsObserver: Subscriber<'objects' | 'role'> | undefined;
   tempRefObj: (
     | fabric.Line
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
@@ -97,7 +104,7 @@ export class AppComponent implements OnInit {
     })?.subscribe((arg) => {
       if ('objects') {
         this.renderObjectsOnCanvas();
-      } else if ('action') {
+      } else if ('role') {
       }
     });
 
@@ -147,18 +154,23 @@ export class AppComponent implements OnInit {
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvas) return;
     if (
-      this.app$?.action &&
-      this.app$.action != 'select' &&
-      this.app$.action != 'pen'
+      this.app$?.role &&
+      this.app$.role != 'select' &&
+      this.app$.role != 'pen' &&
+      this.app$.role != 'image'
     ) {
       this.isDrawing = true;
-      const obj = this.createObjects(event, this.app$.action);
+      const obj = this.createObjects(event, this.app$.role);
       if (obj) {
         obj._id = uuidv4();
         this.currentDrawingObject = obj;
         this.updateObjects(obj);
+        if (obj.type === 'i-text') {
+          const text = obj as fabric.IText;
+          text.enterEditing();
+        }
       }
-    } else if (this.app$?.action === 'pen') {
+    } else if (this.app$?.role === 'pen') {
       this.isPathControlPointMoving = true;
       this.isDrawing = true;
       if (this.currentDrawingObject) {
@@ -174,7 +186,7 @@ export class AppComponent implements OnInit {
         ]);
         this.updateObjects(this.currentDrawingObject, 'popAndPush');
       } else {
-        const obj = this.createObjects(event, this.app$.action);
+        const obj = this.createObjects(event, this.app$.role);
         if (obj) {
           obj._id = uuidv4();
           this.currentDrawingObject = obj;
@@ -184,7 +196,7 @@ export class AppComponent implements OnInit {
     }
   }
   onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
-    if (this.app$?.action === 'select' && event.target?.type === 'path') {
+    if (this.app$?.role === 'select' && event.target?.type === 'path') {
       const path = event.target as fabric.Path & { _id: string };
       this.tempRefObj = [];
       path.path?.forEach((points, i) => {
@@ -236,11 +248,11 @@ export class AppComponent implements OnInit {
     if (
       this.isDrawing &&
       event.pointer &&
-      this.app$?.action &&
-      this.app$.action != 'select' &&
-      this.app$.action != 'pencil'
+      this.app$?.role &&
+      this.app$.role != 'select' &&
+      this.app$.role != 'pencil'
     ) {
-      switch (this.app$.action) {
+      switch (this.app$.role) {
         case 'line':
           const line = obj as unknown as fabric.Line;
           line.set({ x2: event.pointer.x, y2: event.pointer.y });
@@ -279,7 +291,7 @@ export class AppComponent implements OnInit {
       this.updateObjects(obj, 'popAndPush');
     }
     if (
-      this.app$?.action === 'pen' &&
+      this.app$?.role === 'pen' &&
       this.currentDrawingObject?.type == 'path' &&
       !this.isPathControlPointMoving
     ) {
@@ -290,19 +302,20 @@ export class AppComponent implements OnInit {
 
       this.reRender();
       const start = pen.path[pen.path.length - 1] as unknown as number[];
-      this.tempRefObj[0] = new fabric.Line(
-        [
-          start[3] || start[1],
-          start[4] || start[2],
-          event.pointer!.x,
-          event.pointer!.y,
-        ],
-        {
-          stroke: 'gray',
-          strokeWidth: 1,
-        }
+      this.canvas?.add(
+        new fabric.Line(
+          [
+            start[3] || start[1],
+            start[4] || start[2],
+            event.pointer!.x,
+            event.pointer!.y,
+          ],
+          {
+            stroke: 'gray',
+            strokeWidth: 1,
+          }
+        )
       );
-      this.canvas?.add(this.tempRefObj[0]);
     }
   }
 
@@ -311,7 +324,7 @@ export class AppComponent implements OnInit {
     this.isDrawing = false;
     this.isPathControlPointMoving = false;
 
-    if (this.app$?.action === 'pen') {
+    if (this.app$?.role === 'pen') {
       if (
         this.currentDrawingObject &&
         this.currentDrawingObject.type === 'path'
@@ -331,11 +344,14 @@ export class AppComponent implements OnInit {
       }
       // return;
     }
-
+    // if(this.app$?.role==="text"){
+    // const text= this.objects[this.objects.length-1] as fabric.IText
+    // text.enterEditing()
+    // }
     if (
-      this.app$?.action !== 'pencil' &&
-      this.app$?.action !== 'select' &&
-      this.app$?.action !== 'pen'
+      this.app$?.role !== 'pencil' &&
+      this.app$?.role !== 'select' &&
+      this.app$?.role !== 'pen'
     ) {
       this.currentDrawingObject = undefined;
       this.setCurrentAction('select');
@@ -343,24 +359,23 @@ export class AppComponent implements OnInit {
   }
 
   onPathCreated(e: { path: fabric.Path }): void {
-    if (this.app$?.action !== 'pencil') return;
+    if (this.app$?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
     this.updateObjects(path);
   }
   reRender() {
     this.objectsObserver?.next('objects');
-    console.log('re');
   }
-  createObjects(e: fabric.IEvent<MouseEvent>, action: Roles) {
+  createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
     if (!e.pointer) return;
     const { x, y } = e.pointer;
-    if (action === 'line') {
+    if (role === 'line') {
       return new fabric.Line([x, y, x, y], {
         stroke: 'gray',
         strokeWidth: 5,
       }) as Object;
-    } else if (action === 'rectangle') {
+    } else if (role === 'rectangle') {
       return new fabric.Rect({
         top: e.pointer?.y,
         left: e.pointer?.x,
@@ -368,7 +383,7 @@ export class AppComponent implements OnInit {
         width: 0,
         height: 0,
       }) as Object;
-    } else if (action === 'circle') {
+    } else if (role === 'circle') {
       return new fabric.Circle({
         top: e.pointer?.y,
         left: e.pointer?.x,
@@ -378,7 +393,7 @@ export class AppComponent implements OnInit {
         stroke: 'gray',
         fill: '',
       }) as Object;
-    } else if (action === 'pen') {
+    } else if (role === 'pen') {
       const quadraticCurve = new fabric.Path(`M ${x} ${y}`, {
         fill: '',
         stroke: 'red',
@@ -388,25 +403,34 @@ export class AppComponent implements OnInit {
       });
       // const quadratic_curve_group = new fabric.Group();
       return quadraticCurve as Object;
+    } else if (role === 'text') {
+      const text = new fabric.IText('', {
+        top: e.pointer.y,
+        left: e.pointer.x,
+        stroke: 'gray',
+        fill: 'gray',
+        editable: true,
+      });
+      return text as Object;
     } else {
       return;
     }
   }
 
-  setCurrentAction(action: Roles) {
+  setCurrentAction(role: Roles) {
     if (!this.canvas) return;
-    this.store.dispatch(setRole({ action }));
+    this.store.dispatch(setRole({ role }));
     if (this.currentDrawingObject?.type === 'path') {
       this.loadSVGFromString(this.currentDrawingObject);
     }
     this.currentDrawingObject = undefined;
     this.reRender();
-    if (action === 'pencil') {
+    if (role === 'pencil') {
       this.canvas.isDrawingMode = true;
     } else {
       this.canvas.isDrawingMode = false;
     }
-    if (action === 'select') {
+    if (role === 'select') {
       this.objectCustomization(true);
     } else {
       this.objectCustomization(false);
@@ -447,7 +471,6 @@ export class AppComponent implements OnInit {
     } else if (method === 'replace' && !Array.isArray(object)) {
       this.objects = this.objects.map((obj) => {
         if (object._id === obj._id) {
-          console.log('got');
           return object;
         }
         return obj;

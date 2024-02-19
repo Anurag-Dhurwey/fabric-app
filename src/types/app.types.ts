@@ -4,13 +4,24 @@ export type Roles =
   | 'line'
   | 'circle'
   | 'rectangle'
-  | 'pencil';
+  | 'pencil'
+  | 'image'
+  | 'text';
 export type Object = (
   | (fabric.Path & { isPathClosed?: boolean })
   | fabric.Line
   | fabric.Rect
   | fabric.Circle
-) & { _id: string; _type?: 'line' | 'circle' | 'rectangle' | 'pencil' | 'pen' };
+  | fabric.Image
+  | fabric.IText
+) & {
+  _id: string;
+  _type?: 'line' | 'circle' | 'rectangle' | 'pencil' | 'pen' | 'image' | 'text';
+};
 
-export type Position={x:number,y:number}
-export type Presense={ id: string; mouse: Position; expire: number }
+export type Position = { x: number; y: number };
+export type Presense = { id: string; mouse: Position; expire: number };
+export type TextArea = {
+  position: Position | null;
+  value: string;
+};

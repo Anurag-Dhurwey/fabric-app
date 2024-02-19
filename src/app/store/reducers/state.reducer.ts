@@ -7,12 +7,12 @@ export type CanvasConfig={
   height:number
 }
 export type appState = {
-  action: Roles;
+  role: Roles;
   canvasConfig:CanvasConfig
 };
 
 const initialstate: appState = {
-  action: 'select',
+  role: 'select',
   canvasConfig:{
     backgroungColor:"#282829",
     width:window.innerWidth,
@@ -22,6 +22,6 @@ const initialstate: appState = {
 
 export const appReducer = createReducer(
   initialstate,
-  on(setRole, (state, { action }) => ({ ...state, action: action })),
+  on(setRole, (state, { role }) => ({ ...state,role })),
   on(setCanvasConfig, (state, props) => ({ ...state, canvasConfig:{...state.canvasConfig,...props} })),
 );
