@@ -3,24 +3,25 @@ intersection=========>
 [
   'top',
   'left',
-  'width',
+  'width'
   'height',
-  'angle',
-  'backgroundColor',
-  'stroke',
-  'fill',
-  'fillRule',
-  'flipX',
-  'flipY',
-  'opacity',
-  'visible',
-  'originX',
-  'originY',
   'scaleX',
   'scaleY',
+  'angle',
+  'originX',
+  'originY',
+  'flipX',
+  'flipY',
+  'backgroundColor',
+  'fill',
+  'fillRule',
+  'globalCompositeOperation',
+  'opacity',
+  'paintFirst',
   'shadow',
   'skewX',
   'skewY',
+  'stroke',
   'strokeDashArray',
   'strokeDashOffset',
   'strokeLineCap',
@@ -29,10 +30,11 @@ intersection=========>
   'strokeUniform',
   'strokeWidth',
   'type',
-  'paintFirst',
   'version',
-  'globalCompositeOperation'
+  'visible',
 ]
+
+
 
 
 
@@ -456,3 +458,107 @@ version: "5.3.0"
 visible: true
 ,
 width: 483
+
+
+
+
+text====================>
+
+
+angle: 0
+,
+backgroundColor: ""
+,
+charSpacing: 0
+,
+direction: "ltr"
+,
+fill: "gray"
+,
+fillRule: "nonzero"
+,
+flipX: false
+,
+flipY: false
+,
+fontFamily: "Times New Roman"
+,
+fontSize: 40
+,
+fontStyle: "normal"
+,
+fontWeight: "normal"
+,
+globalCompositeOperation: "source-over"
+,
+height: 45.2
+,
+left: 706
+,
+lineHeight: 1.16
+,
+linethrough: false
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+overline: false
+,
+paintFirst: "fill"
+,
+path: null
+,
+pathAlign: "baseline"
+,
+pathSide: "left"
+,
+pathStartOffset: 0
+,
+scaleX: 1
+,
+scaleY: 1
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+stroke: "gray"
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "butt"
+,
+strokeLineJoin: "miter"
+,
+strokeMiterLimit: 4
+,
+strokeUniform: false
+,
+strokeWidth: 1
+,
+styles: Array []
+,
+text: "anurag"
+,
+textAlign: "left"
+,
+textBackgroundColor: ""
+,
+top: 246
+,
+type: "i-text"
+,
+underline: false
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 108.83

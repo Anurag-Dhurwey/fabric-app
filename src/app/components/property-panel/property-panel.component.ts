@@ -1,14 +1,25 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommomComponent } from './commom/commom.component';
+import { Object } from '../../../types/app.types';
 
 @Component({
   selector: 'app-property-panel',
   standalone: true,
-  imports: [],
+  imports: [CommomComponent],
   templateUrl: './property-panel.component.html',
-  styleUrl: './property-panel.component.css'
+  styleUrl: './property-panel.component.css',
 })
 export class PropertyPanelComponent {
   @Input() canvas: fabric.Canvas | undefined;
   @Input() objects: Object[] | undefined;
   @Output() reRender = new EventEmitter<any>();
+  // selectedObj: fabric.Object | undefined | null;
+  constructor() {
+    // this.selectedObj = this.canvas?.getActiveObject();
+  }
+
+  selectedObj(){
+    return this.canvas?.getActiveObject()
+  }
+
 }

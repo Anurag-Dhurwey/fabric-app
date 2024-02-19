@@ -25,3 +25,11 @@ export type TextArea = {
   position: Position | null;
   value: string;
 };
+
+
+
+
+export type CommonProperty={
+  title:string,
+  keys:{lable:string,key:string,val_type:string,inputBox_type:string}[]
+}

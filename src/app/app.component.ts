@@ -476,7 +476,8 @@ export class AppComponent implements OnInit {
         return obj;
       });
     }
-    this.objectsObserver?.next('objects');
+    this.reRender();
+  //  !Array.isArray(object) &&this.canvas?.setActiveObject(object)
     this.socketService.emit(
       'objects:modified',
       this.canvas?.toObject().objects

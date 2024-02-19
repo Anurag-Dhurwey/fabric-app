@@ -1,0 +1,64 @@
+<style>
+  .propertyCard {
+    padding-bottom: 15px;
+    width: 100%;
+    height: fit-content;
+    border-bottom: 2px solid black;
+  }
+  .propertyCard > div {
+    width: 100%;
+    height: fit-content;
+  }
+
+
+  .propertyCard button {
+    font-size: larger;
+    background: none;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .propertyCard span label {
+    font-size: small;
+  }
+
+  .propertyCard span input {
+    width: 50px;
+    font-size: x-small;
+    /* border: none; */
+    text-align: center;
+    /* background-color: ; */
+    background: none;
+  }
+
+  .color_box {
+    width: 25px !important;
+    height: 25px;
+    border-radius: 2px;
+    border: 1px;
+    background: transparent;
+    overflow: hidden;
+  }
+</style>
+
+@for (common of commonData; track $index) {
+<div class="propertyCard">
+  <h6>{{ common.title }}</h6>
+  <div>
+    @for (key of common.keys; track $index) {
+    <span>
+      <label [for]="key.key">
+        {{ key.lable }}
+      </label>
+      <input
+        [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
+        [type]="key.inputBox_type"
+        [name]="key.key"
+      />
+    </span>
+    }
+  </div>
+</div>
+}
