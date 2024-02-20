@@ -26,9 +26,14 @@
     cursor: pointer;
   }
 </style>
-@for (obj of objects; track $index) {
+
+@if(context_menu){
+<app-layer-panel-context-menu [position]="context_menu" />
+}  @for (obj of objects; track $index) {
 <div>
-  <span style="width: 75%">{{ obj.type }}</span>
+  <span (contextmenu)="onRightClickAtLayer($event)" style="width: 75%">{{
+    obj.type
+  }}</span>
   <span style="width: 25%">
     <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
       {{ obj.visible ? "visibility " : " visibility_off" }}
