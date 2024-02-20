@@ -7,16 +7,19 @@ export type Roles =
   | 'pencil'
   | 'image'
   | 'text';
+
+export type Group = fabric.Group & { _objects: Object[]; type: 'group' };
+
 export type Object = (
-  | (fabric.Path & { isPathClosed?: boolean })
-  | fabric.Line
-  | fabric.Rect
-  | fabric.Circle
-  | fabric.Image
-  | fabric.IText
+  | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
+  | (fabric.Line & { type: 'line' })
+  | (fabric.Rect & { type: 'rect' })
+  | (fabric.Circle & { type: 'circle' })
+  | (fabric.Image & { type: 'image' })
+  | (fabric.IText & { type: 'i-text' })
+  | Group
 ) & {
   _id: string;
-  _type?: 'line' | 'circle' | 'rectangle' | 'pencil' | 'pen' | 'image' | 'text';
 };
 
 export type Position = { x: number; y: number };

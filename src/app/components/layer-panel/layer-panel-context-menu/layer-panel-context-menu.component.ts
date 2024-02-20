@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Position } from '../../../../types/app.types';
 
 @Component({
@@ -10,5 +10,6 @@ import { Position } from '../../../../types/app.types';
 })
 export class LayerPanelContextMenuComponent {
   @Input() position: Position | undefined|null;
+  @Output() onGroup=new EventEmitter();
   
 }

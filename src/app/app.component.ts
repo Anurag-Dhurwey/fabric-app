@@ -164,6 +164,7 @@ export class AppComponent implements OnInit {
       const obj = this.createObjects(event, this.app$.role);
       if (obj) {
         obj._id = uuidv4();
+        // console.log(obj._id)
         this.currentDrawingObject = obj;
         this.updateObjects(obj);
         if (obj.type === 'i-text') {
@@ -190,6 +191,7 @@ export class AppComponent implements OnInit {
         const obj = this.createObjects(event, this.app$.role);
         if (obj) {
           obj._id = uuidv4();
+          // console.log(obj._id)
           this.currentDrawingObject = obj;
           this.updateObjects(obj);
         }
@@ -333,6 +335,7 @@ export class AppComponent implements OnInit {
         const penPath = this.currentDrawingObject as fabric.Path & {
           isPathClosed?: boolean;
           _id: string;
+          type:'path'
         };
         const path = penPath.path as unknown as number[][];
 
@@ -387,6 +390,7 @@ export class AppComponent implements OnInit {
         stroke: '#81868a',
         width: 0,
         height: 0,
+        
       }) as Object;
     } else if (role === 'circle') {
       return new fabric.Circle({
@@ -397,6 +401,7 @@ export class AppComponent implements OnInit {
         radius: 0,
         stroke: '#81868a',
         fill: '',
+        
       }) as Object;
     } else if (role === 'pen') {
       const quadraticCurve = new fabric.Path(`M ${x} ${y}`, {
@@ -415,6 +420,7 @@ export class AppComponent implements OnInit {
         stroke: '#81868a',
         fill: '#81868a',
         editable: true,
+        selected:true
       });
       return text as Object;
     } else {
@@ -463,10 +469,10 @@ export class AppComponent implements OnInit {
   }
   updateObjects(
     object: Object | Object[],
-    method: 'push' | 'replaceAll' | 'popAndPush' | 'replace' = 'push'
+    method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
   ) {
-    if (method === 'replaceAll' && Array.isArray(object)) {
-      this.objects = object;
+    if (method === 'reset' && Array.isArray(object)) {
+      this.objects = [...object];
     }
 
     if (method === 'push' && !Array.isArray(object)) {

@@ -21,7 +21,7 @@
   class="modal"
   [style]="{ top: position.y + 'px', left: position.x + 'px' }"
 >
-  <button type="button">Group</button>
+  <button type="button" (click)="onGroup.emit()">Group</button>
   <button type="button">Hide</button>
   <button type="button">Lock</button>
   <button type="button">Delete</button>

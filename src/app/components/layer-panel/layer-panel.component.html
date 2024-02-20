@@ -1,8 +1,7 @@
 <style>
-  div {
-    margin: 0px 4px;
+  .independent-layer {
     padding: 5px 0px;
-    border-radius: 10px;
+    border: 2px solid  rgb(162, 160, 160);
     background-color: rgb(162, 160, 160);
     display: flex;
     justify-content: center;
@@ -11,29 +10,86 @@
     height: 20px;
     min-height: 20px;
   }
+  app-layer-panel {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 2px;
+    width: 100%;
+    height: fit-content;
+  }
 
-  div > span {
+  .independent-layer > span {
     display: flex;
     justify-content: center;
     align-items: center;
     column-gap: 5px;
   }
-  div > span > button {
+  .independent-layer > span > button {
     font-size: medium;
     background: none;
     outline: none;
     border: none;
     cursor: pointer;
   }
+  .group {
+    border: 2px solid gray;
+    flex-direction: column;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .independent-layer:hover {
+    border: 2px solid rgb(0, 106, 255);
+  }
 </style>
 
 @if(context_menu){
-<app-layer-panel-context-menu [position]="context_menu" />
-}  @for (obj of objects; track $index) {
-<div>
-  <span (contextmenu)="onRightClickAtLayer($event)" style="width: 75%">{{
-    obj.type
-  }}</span>
+<app-layer-panel-context-menu
+  (onGroup)="createGroup()"
+  [position]="context_menu"
+/>
+}
+
+@for (obj of layers; track $index) { @if(obj.type==='group'){
+
+<div class="group">
+  <div class="independent-layer">
+    <span style="width: 15%" class="Triangle">
+      <button class="material-symbols-outlined">expand_more</button>
+    </span>
+    <span style="width: 60%">{{ obj.type }}</span>
+    <span style="width: 25%">
+      <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
+        {{ obj.visible ? "visibility " : " visibility_off" }}
+      </button>
+      <button
+        class="material-symbols-outlined"
+        (click)="toggleControllability(obj)"
+      >
+        {{ obj.selectable ? "lock_open_right" : "lock" }}
+      </button>
+    </span>
+  </div>
+  <app-layer-panel
+    [objects]="objects"
+    [layers]="obj._objects"
+    [canvas]="canvas"
+    (reRender)="reRender.emit()"
+    (updateObjects)="
+      updateObjects.emit({ object: $event.object, method: $event.method })
+    "
+  />
+</div>
+}@else {
+
+<div
+class="independent-layer"
+  (click)="onLeftClick($event, obj)"
+  (contextmenu)="onRightClickAtLayer($event)"
+>
+  <span style="width: 75%">{{ obj.type }}</span>
   <span style="width: 25%">
     <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
       {{ obj.visible ? "visibility " : " visibility_off" }}
@@ -46,4 +102,4 @@
     </button>
   </span>
 </div>
-}
+} }

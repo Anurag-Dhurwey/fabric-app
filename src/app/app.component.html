@@ -80,8 +80,10 @@
   />
   <app-layer-panel
     [objects]="objects"
+    [layers]="objects"
     [canvas]="canvas"
     (reRender)="reRender()"
+    (updateObjects)="updateObjects($event.object, $event.method)"
   />
   <app-property-panel
     [objects]="objects"
