@@ -56,6 +56,7 @@ export class AppComponent implements OnInit {
     board.height = window.innerHeight;
     this.canvas = new fabric.Canvas(board, {
       backgroundColor: this.app$?.canvasConfig.backgroungColor,
+      stopContextMenu: true,
     });
     window.addEventListener('resize', () => {
       board.width = window.innerWidth;
@@ -139,9 +140,17 @@ export class AppComponent implements OnInit {
       this.app$?.canvasConfig.backgroungColor || '#282829',
       () => {}
     );
-    this.objects.forEach((obj) => {
-      this.canvas?.add(obj);
-    });
+    const draw = (objects: Object[]) => {
+      objects.forEach((obj) => {
+        if (obj.type === 'group') {
+          // const se=obj.ungroupOnCanvas()
+          draw(obj._objects as Object[]);
+        } else {
+          this.canvas?.add(obj);
+        }
+      });
+    };
+    draw(this.objects)
     this.tempRefObj?.forEach((ref) => {
       this.canvas?.add(ref);
     });
@@ -335,7 +344,7 @@ export class AppComponent implements OnInit {
         const penPath = this.currentDrawingObject as fabric.Path & {
           isPathClosed?: boolean;
           _id: string;
-          type:'path'
+          type: 'path';
         };
         const path = penPath.path as unknown as number[][];
 
@@ -390,7 +399,6 @@ export class AppComponent implements OnInit {
         stroke: '#81868a',
         width: 0,
         height: 0,
-        
       }) as Object;
     } else if (role === 'circle') {
       return new fabric.Circle({
@@ -401,7 +409,6 @@ export class AppComponent implements OnInit {
         radius: 0,
         stroke: '#81868a',
         fill: '',
-        
       }) as Object;
     } else if (role === 'pen') {
       const quadraticCurve = new fabric.Path(`M ${x} ${y}`, {
@@ -420,7 +427,7 @@ export class AppComponent implements OnInit {
         stroke: '#81868a',
         fill: '#81868a',
         editable: true,
-        selected:true
+        selected: true,
       });
       return text as Object;
     } else {

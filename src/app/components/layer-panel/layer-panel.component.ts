@@ -48,7 +48,6 @@ export class LayerPanelComponent implements OnInit {
 
   createGroup() {
     function add_series_Property(objects: obj_with_series[]) {
-      console.log({ objects });
       let count = 0;
 
       function traverse(obj: obj_with_series) {
@@ -146,13 +145,16 @@ export class LayerPanelComponent implements OnInit {
           return gets_i(rootArray, element._id)?.series_index as number;
         })
       );
-      // console.log(rootArray)
-      const newGroup = new fabric.Group(selectedElements, {
+      // console.log(selectedElements[0].left,selectedElements[0].top)
+      const newGroup = new fabric.Group([], {
         _id: newGroupId,
         series_index: seriesIndex,
+        top:selectedElements[0].top,
+        left:selectedElements[0].left,
       } as IGroupOptions).setCoords() as group & {
         _id: string;
       };
+      newGroup._objects=selectedElements
       // Function to recursively insert the new group
       const insertGroup = (array: obj_with_series[]): obj_with_series[] => {
         return array.flatMap((element) => {
@@ -161,12 +163,6 @@ export class LayerPanelComponent implements OnInit {
             element._objects = insertGroup(element._objects);
           }
 
-          console.log(
-            element.series_index === seriesIndex,
-            element.series_index,
-            ' ',
-            seriesIndex
-          );
           if (element.series_index === seriesIndex) {
             return [newGroup, element];
           } else {
