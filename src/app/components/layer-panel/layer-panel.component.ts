@@ -35,8 +35,8 @@ export class LayerPanelComponent implements OnInit {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
     this.reRender.emit();
   }
-  setActiveSelection(object: Object) {
-    const traversed: fabric.Object[] = [];
+  setActiveSelection(e: MouseEvent, object: Object) {
+    let traversed: Object[] = [];
     const traverse = (item: Object | Object[]) => {
       if (Array.isArray(item)) {
         item.forEach((obj) => {
@@ -54,20 +54,30 @@ export class LayerPanelComponent implements OnInit {
         }
       }
     };
-    traverse(object)
-    if(traversed.length){
-      const select = new fabric.ActiveSelection([], { canvas: this.canvas });
-      select._objects = traversed;
-      this.canvas?.setActiveObject(select);
-      this.canvas?.renderAll();
-    }else{
-      console.log(traversed + "is empty")
+    traverse(object);
+    if (e.ctrlKey) {
+      const pre = this.canvas?.getActiveObjects() as Object[] | undefined;
+      if (pre?.length) {
+        traversed.push(...pre);
+        if (pre.some((ele) => ele._id === object._id)) {
+          traversed = traversed.filter((ele) => ele._id !== object._id);
+        } 
+      }
     }
+    if (traversed.length) {
+      this.canvas?.discardActiveObject();
+      const select = new fabric.ActiveSelection(traversed, {
+        canvas: this.canvas,
+      });
 
+      this.canvas?.setActiveObject(select);
+      this.canvas?.requestRenderAll();
+    } else {
+      console.log("traversed" + 'is empty');
+    }
   }
   onLeftClick(e: MouseEvent, data: Object) {
-    this.setActiveSelection(data)
-    
+    this.setActiveSelection(e, data);
   }
   onRightClickAtLayer(e: MouseEvent) {
     e.preventDefault();
