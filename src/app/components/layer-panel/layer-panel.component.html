@@ -55,7 +55,7 @@
 @for (obj of layers; track $index) { @if(obj.type==='group'){
 
 <div class="group">
-  <div class="independent-layer">
+  <div class="independent-layer" (click)="onLeftClick($event, obj)">
     <span style="width: 15%" class="Triangle">
       <button class="material-symbols-outlined">expand_more</button>
     </span>

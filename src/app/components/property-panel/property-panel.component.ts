@@ -20,6 +20,10 @@ export class PropertyPanelComponent {
       if (!event.selected) return;
       this.selectedObj = event.selected;
     });
+    this.canvas?.on('selection:updated', (event) => {
+      if (!event.selected) return;
+      this.selectedObj = event.selected;
+    });
     this.canvas?.on('selection:cleared', () => {
       this.selectedObj = [];
     });

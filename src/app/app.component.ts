@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToolBarComponent } from './components/tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
@@ -6,7 +6,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
 import { appState } from './store/reducers/state.reducer';
 import { setRole } from './store/actions/state.action';
-import { Roles, Object, Presense, TextArea } from '../types/app.types';
+import { Roles, Object, Presense} from '../types/app.types';
 import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -143,7 +143,6 @@ export class AppComponent implements OnInit {
     const draw = (objects: Object[]) => {
       objects.forEach((obj) => {
         if (obj.type === 'group') {
-          // const se=obj.ungroupOnCanvas()
           draw(obj._objects as Object[]);
         } else {
           this.canvas?.add(obj);
@@ -163,6 +162,9 @@ export class AppComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvas) return;
+    if(event.target){
+this.canvas.setActiveObject(event.target)
+    }
     if (
       this.app$?.role &&
       this.app$.role != 'select' &&
@@ -200,7 +202,6 @@ export class AppComponent implements OnInit {
         const obj = this.createObjects(event, this.app$.role);
         if (obj) {
           obj._id = uuidv4();
-          // console.log(obj._id)
           this.currentDrawingObject = obj;
           this.updateObjects(obj);
         }

@@ -30,16 +30,44 @@ export class LayerPanelComponent implements OnInit {
   toggleVisibility(obj: Object, arg?: boolean) {
     obj.visible = arg !== undefined ? arg : !obj.visible;
     this.reRender.emit();
-    // console.log(obj)
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
     this.reRender.emit();
-    // console.log(obj)
+  }
+  setActiveSelection(object: Object) {
+    const traversed: fabric.Object[] = [];
+    const traverse = (item: Object | Object[]) => {
+      if (Array.isArray(item)) {
+        item.forEach((obj) => {
+          if (obj.type === 'group') {
+            traverse(obj._objects);
+          } else {
+            traversed.push(obj);
+          }
+        });
+      } else {
+        if (item.type === 'group') {
+          traverse(item._objects);
+        } else {
+          traversed.push(item);
+        }
+      }
+    };
+    traverse(object)
+    if(traversed.length){
+      const select = new fabric.ActiveSelection([], { canvas: this.canvas });
+      select._objects = traversed;
+      this.canvas?.setActiveObject(select);
+      this.canvas?.renderAll();
+    }else{
+      console.log(traversed + "is empty")
+    }
+
   }
   onLeftClick(e: MouseEvent, data: Object) {
-    this.canvas?.setActiveObject(data);
-    this.canvas?.renderAll();
+    this.setActiveSelection(data)
+    
   }
   onRightClickAtLayer(e: MouseEvent) {
     e.preventDefault();
@@ -149,12 +177,12 @@ export class LayerPanelComponent implements OnInit {
       const newGroup = new fabric.Group([], {
         _id: newGroupId,
         series_index: seriesIndex,
-        top:selectedElements[0].top,
-        left:selectedElements[0].left,
+        top: selectedElements[0].top,
+        left: selectedElements[0].left,
       } as IGroupOptions).setCoords() as group & {
         _id: string;
       };
-      newGroup._objects=selectedElements
+      newGroup._objects = selectedElements;
       // Function to recursively insert the new group
       const insertGroup = (array: obj_with_series[]): obj_with_series[] => {
         return array.flatMap((element) => {
