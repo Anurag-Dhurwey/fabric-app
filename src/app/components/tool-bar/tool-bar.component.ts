@@ -20,6 +20,7 @@ import {
   setCanvasConfigProp,
 } from '../../store/actions/state.action';
 import { fabric } from 'fabric';
+import { CanvasService } from '../../services/canvas.service';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
@@ -28,18 +29,18 @@ import { fabric } from 'fabric';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  @Input() canvas: fabric.Canvas | undefined;
+  // @Input() canvas: fabric.Canvas | undefined;
   @Output() setCurrentAction = new EventEmitter<Roles>();
-  @Output() reRender = new EventEmitter<any>();
-  @Output() updateObjects = new EventEmitter<{
-    object: Object | Object[];
-    method?: 'push';
-  }>();
+  // @Output() reRender = new EventEmitter<any>();
+  // @Output() updateObjects = new EventEmitter<{
+  //   object: Object | Object[];
+  //   method?: 'push';
+  // }>();
   private store = inject(Store);
   app$: appState | undefined;
   setting: boolean = false;
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
-  constructor() {
+  constructor(private canvasService: CanvasService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
   roles: { role: Roles; icon: string }[] = [
@@ -62,7 +63,7 @@ export class ToolBarComponent {
           fabric.Image?.fromURL(reader.result, (imgObj) => {
             const object = imgObj as Object;
             object._id = uuidv4();
-            this.updateObjects.emit({ object, method: 'push' });
+            this.canvasService.updateObjects(object, 'push');
           });
       };
       reader.readAsDataURL(file);
@@ -76,7 +77,7 @@ export class ToolBarComponent {
     }
   }
   exportCanvasObjectsToJson() {
-    console.log(this.canvas?.toJSON());
+    console.log(this.canvasService.canvas?.toJSON());
   }
   toggleSetting(arg?: boolean) {
     this.setting = arg != undefined ? arg : !this.setting;
@@ -89,7 +90,10 @@ export class ToolBarComponent {
   configCanvas(data: setCanvasConfigProp) {
     this.store.dispatch(setCanvasConfig(data));
     data.backgroungColor &&
-      this.canvas?.setBackgroundColor(data.backgroungColor, () => {});
-    this.canvas?.renderAll();
+      this.canvasService.canvas?.setBackgroundColor(
+        data.backgroungColor,
+        () => {}
+      );
+    this.canvasService.canvas?.renderAll();
   }
 }

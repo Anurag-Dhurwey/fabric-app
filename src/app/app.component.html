@@ -72,24 +72,9 @@
 </style>
 
 <main class="main">
-  <app-tool-bar
-    [canvas]="canvas"
-    (setCurrentAction)="setCurrentAction($event)"
-    (reRender)="reRender()"
-    (updateObjects)="updateObjects($event.object, $event.method)"
-  />
-  <app-layer-panel
-    [objects]="objects"
-    [layers]="objects"
-    [canvas]="canvas"
-    (reRender)="reRender()"
-    (updateObjects)="updateObjects($event.object, $event.method)"
-  />
-  <app-property-panel
-    [objects]="objects"
-    [canvas]="canvas"
-    (reRender)="reRender()"
-  />
+  <app-tool-bar (setCurrentAction)="setCurrentAction($event)" />
+  <app-layer-panel [layers]="canvasService.objects" />
+  <app-property-panel />
 
   <canvas id="canvas"></canvas>
   @for (item of presense; track $index) {

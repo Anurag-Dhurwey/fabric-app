@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonProperty } from '../../../../types/app.types';
+import { CanvasService } from '../../../services/canvas.service';
 
 @Component({
   selector: 'app-commom',
@@ -9,9 +10,9 @@ import { CommonProperty } from '../../../../types/app.types';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
-  @Input() objects: fabric.Object[] = [];
-  @Output() reRender = new EventEmitter();
-  @Input() canvas: fabric.Canvas | undefined;
+  // @Input() objects: fabric.Object[] = [];
+  // @Output() reRender = new EventEmitter();
+  // @Input() canvas: fabric.Canvas | undefined;
   commonData: CommonProperty[] = [
     {
       title: 'Position',
@@ -123,24 +124,24 @@ export class CommomComponent {
       ],
     },
   ];
+constructor(public canvasService: CanvasService){
 
-  // ngAfterViewInit(){
-  //   console.log(this.objects[0].fill)
-  // }
+}
+  
 
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = this.extractValueFromTarget(target);
-    console.log(value);
-    if (value !== null && this.objects?.length === 1) {
-      this.objects[0].set(target.name as keyof fabric.Object, value);
-      this.reRender.emit();
-      this.canvas?.setActiveObject(this.objects[0]);
+    console.log(this.canvasService.selectedObj[0]);
+    if (value !== null && this.canvasService.selectedObj?.length === 1) {
+      this.canvasService.selectedObj[0].set(target.name as keyof fabric.Object, value);
+      this.canvasService.canvas?.renderAll();
+      // this.canvasService.canvas?.setActiveObject(this.canvasService.selectedObj[0]);
     }
   }
 
   extractValueFromTarget(target: HTMLInputElement) {
-    console.log(target.name);
+    // console.log(target.name);
     if (
       [
         'top',

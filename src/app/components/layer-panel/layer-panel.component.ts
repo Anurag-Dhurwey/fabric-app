@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component,  Input, OnInit } from '@angular/core';
 import { Group, Object, Position } from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
+import { CanvasService } from '../../services/canvas.service';
 
 @Component({
   selector: 'app-layer-panel',
@@ -13,14 +14,15 @@ import { IGroupOptions } from 'fabric/fabric-impl';
   styleUrl: './layer-panel.component.css',
 })
 export class LayerPanelComponent implements OnInit {
-  @Input() canvas: fabric.Canvas | undefined;
-  @Input() objects: Object[] | undefined;
+  // @Input() canvas: fabric.Canvas | undefined;
+  // @Input() objects: Object[] | undefined;
   @Input() layers: Object[] | undefined;
-  @Output() reRender = new EventEmitter<any>();
-  @Output() updateObjects = new EventEmitter<{
-    object: Object[];
-    method?: 'reset';
-  }>();
+  // @Output() reRender = new EventEmitter<any>();
+  // @Output() updateObjects = new EventEmitter<{
+  //   object: Object[];
+  //   method?: 'reset';
+  // }>();
+  constructor(public canvasService: CanvasService) {}
   context_menu: Position | null = null;
   ngOnInit(): void {
     document.addEventListener('click', () => {
@@ -29,11 +31,11 @@ export class LayerPanelComponent implements OnInit {
   }
   toggleVisibility(obj: Object, arg?: boolean) {
     obj.visible = arg !== undefined ? arg : !obj.visible;
-    this.reRender.emit();
+    this.canvasService.reRender();
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
-    this.reRender.emit();
+    this.canvasService.reRender();
   }
   setActiveSelection(e: MouseEvent, object: Object) {
     let traversed: Object[] = [];
@@ -47,6 +49,7 @@ export class LayerPanelComponent implements OnInit {
           }
         });
       } else {
+        console.log(item.left, ' ', item.top);
         if (item.type === 'group') {
           traverse(item._objects);
         } else {
@@ -56,7 +59,9 @@ export class LayerPanelComponent implements OnInit {
     };
     traverse(object);
     if (e.ctrlKey) {
-      const pre = this.canvas?.getActiveObjects() as Object[] | undefined;
+      const pre = this.canvasService.canvas?.getActiveObjects() as
+        | Object[]
+        | undefined;
       if (pre?.length) {
         traversed.push(...pre);
         if (pre.some((ele) => ele._id === object._id)) {
@@ -73,13 +78,16 @@ export class LayerPanelComponent implements OnInit {
       }
     }
     if (traversed.length) {
-      this.canvas?.discardActiveObject();
-      const select = new fabric.ActiveSelection(traversed, {
-        canvas: this.canvas,
-      });
+      this.canvasService.canvas?.discardActiveObject();
+      const select =
+        traversed.length > 1
+          ? new fabric.ActiveSelection(traversed, {
+              canvas: this.canvasService.canvas,
+            })
+          : traversed[0];
 
-      this.canvas?.setActiveObject(select);
-      this.canvas?.requestRenderAll();
+      this.canvasService.canvas?.setActiveObject(select);
+      this.canvasService.canvas?.requestRenderAll();
     } else {
       console.log('traversed' + 'is empty');
     }
@@ -225,13 +233,13 @@ export class LayerPanelComponent implements OnInit {
 
       return rootArray;
     }
-    if (!this.objects) return;
+    if (!this.canvasService.objects) return;
     const updatedStack = createAndInsertGroup(
-      add_series_Property([...this.objects]),
-      (this.canvas?.getActiveObjects() as Object[] | undefined) || []
+      add_series_Property([...this.canvasService.objects]),
+      (this.canvasService.canvas?.getActiveObjects() as Object[] | undefined) ||
+        []
     );
 
-    console.log({ updatedStack });
-    this.updateObjects.emit({ object: updatedStack, method: 'reset' });
+    this.canvasService.updateObjects(updatedStack, 'reset');
   }
 }

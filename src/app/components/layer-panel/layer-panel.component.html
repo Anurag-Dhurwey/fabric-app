@@ -73,13 +73,7 @@
     </span>
   </div>
   <app-layer-panel
-    [objects]="objects"
     [layers]="obj._objects"
-    [canvas]="canvas"
-    (reRender)="reRender.emit()"
-    (updateObjects)="
-      updateObjects.emit({ object: $event.object, method: $event.method })
-    "
   />
 </div>
 }@else {

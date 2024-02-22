@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Inject, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ToolBarComponent } from './components/tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { SocketService } from './services/socket.service';
 import { LayerPanelComponent } from './components/layer-panel/layer-panel.component';
 import { PropertyPanelComponent } from './components/property-panel/property-panel.component';
+import { CanvasService } from './services/canvas.service';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -29,23 +30,26 @@ import { PropertyPanelComponent } from './components/property-panel/property-pan
 export class AppComponent implements OnInit {
   title = 'fabric app';
   app$: appState | undefined;
-  objects: Object[] = [];
-  objectsObserver: Subscriber<'objects' | 'role'> | undefined;
-  tempRefObj: (
-    | fabric.Line
-    | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
-  )[] = [];
+  // objects: Object[] = [];
+  // objectsObserver: Subscriber<'objects' | 'role'> | undefined;
+  // tempRefObj: (
+  //   | fabric.Line
+  //   | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
+  // )[] = [];
   presense: Presense[] = [];
   isDrawing: boolean = false;
   currentDrawingObject: Object | undefined;
-  canvas: fabric.Canvas | undefined;
+  // canvas: fabric.Canvas | undefined;
   isPathControlPointMoving: boolean = false;
   pathPointToAdjust:
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
   private store = inject(Store);
-targetObjectStroke:string|undefined=''
-  constructor(private socketService: SocketService) {
+  targetObjectStroke: string | undefined = '';
+  constructor(
+    private socketService: SocketService,
+    public canvasService: CanvasService
+  ) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
@@ -54,41 +58,43 @@ targetObjectStroke:string|undefined=''
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
-    this.canvas = new fabric.Canvas(board, {
+    this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.app$?.canvasConfig.backgroungColor,
       stopContextMenu: true,
+      // targetFindTolerance:5,
+      // perPixelTargetFind:true
     });
     window.addEventListener('resize', () => {
       board.width = window.innerWidth;
       board.height = window.innerHeight;
-      this.canvas?.setHeight(window.innerHeight);
-      this.canvas?.setWidth(window.innerWidth);
+      this.canvasService.canvas?.setHeight(window.innerHeight);
+      this.canvasService.canvas?.setWidth(window.innerWidth);
     });
-    
-    this.canvas.on('mouse:over', (event) => {
-      if(event.target ){
-        this.targetObjectStroke=event.target.stroke
-        event.target?.set('stroke', 'aqua')
-        this.canvas?.renderAll();
-      } 
+
+    this.canvasService.canvas.on('mouse:over', (event) => {
+      if (event.target) {
+        this.targetObjectStroke = event.target.stroke;
+        event.target?.set('stroke', 'aqua');
+        this.canvasService.canvas?.renderAll();
+      }
     });
-    this.canvas.on('mouse:out', (event) => {
-      if(event.target ){
-        event.target?.set('stroke', this.targetObjectStroke)
-        this.canvas?.renderAll();
-      } 
+    this.canvasService.canvas.on('mouse:out', (event) => {
+      if (event.target) {
+        event.target?.set('stroke', this.targetObjectStroke);
+        this.canvasService.canvas?.renderAll();
+      }
     });
-    this.canvas.on('mouse:down', (event) => this.onMouseDown(event));
-    this.canvas.on('mouse:dblclick', (event) => this.onMouseDoubleClick(event));
-    this.canvas.on('mouse:move', (event) => this.onMouseMove(event));
-    this.canvas.on('mouse:up', (event) => this.onMouseUp(event));
-    this.canvas.on('path:created', (event) =>
+    this.canvasService.canvas.on('mouse:down', (event) => this.onMouseDown(event));
+    this.canvasService.canvas.on('mouse:dblclick', (event) => this.onMouseDoubleClick(event));
+    this.canvasService.canvas.on('mouse:move', (event) => this.onMouseMove(event));
+    this.canvasService.canvas.on('mouse:up', (event) => this.onMouseUp(event));
+    this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
-    this.canvas.on('object:moving', (event) => {
+    this.canvasService.canvas.on('object:moving', (event) => {
       this.socketService.emit(
         'objects:modified',
-        this.canvas?.toObject().objects
+        this.canvasService.canvas?.toObject().objects
       );
 
       const target = event.target as
@@ -103,32 +109,31 @@ targetObjectStroke:string|undefined=''
           // const arr = ref.path![target._refIndex[0]] as unknown as number[];
           // arr[1] = event.pointer!.x;
           // arr[2] = event.pointer!.y;
-          // this.updateObjects(ref, 'replace');
+          // this.canvasService.updateObjects(ref, 'replace');
         } else if (target._refIndex[1] === 2) {
           // const ref = target._refTo;
           // const arr = ref.path![target._refIndex[0]] as unknown as number[];
           // arr[3] = event.pointer!.x;
           // arr[4] = event.pointer!.y;
-          // this.updateObjects(ref, 'replace');
+          // this.canvasService.updateObjects(ref, 'replace');
         }
       }
     });
 
     new Observable((observer) => {
-      this.objectsObserver = observer;
+      this.canvasService.objectsObserver = observer;
     })?.subscribe((arg) => {
       if ('objects') {
-        this.renderObjectsOnCanvas();
-      } else if ('role') {
+        this.canvasService.renderObjectsOnCanvas();
       }
     });
 
     this.socketService.on('objects:modified', (new_objects) => {
-      this.initializeObjcts(new_objects);
+      this.canvasService.initializeObjcts(new_objects);
     });
 
     this.socketService.on('objects', (objects) => {
-      this.initializeObjcts(objects);
+      this.canvasService.initializeObjcts(objects);
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
       this.presense = data;
@@ -137,51 +142,46 @@ targetObjectStroke:string|undefined=''
     this.socketService.emit('objects', {});
   }
 
-  initializeObjcts(objects: any[]) {
-    fabric.util.enlivenObjects(
-      objects,
-      (createdObjs: Object[]) => {
-        this.objects = createdObjs;
-        this.reRender();
-      },
-      'fabric'
-    );
-  }
-  renderObjectsOnCanvas() {
-    this.canvas?.clear();
-    this.canvas?.setBackgroundColor(
-      this.app$?.canvasConfig.backgroungColor || '#282829',
-      () => {}
-    );
-    const draw = (objects: Object[]) => {
-      objects.forEach((obj) => {
-        if (obj.type === 'group') {
-          draw(obj._objects as Object[]);
-        } else {
-          // obj.on('mouse:over',(e)=>{
-          //   e.target?.set('stroke','aqua')
-          //   console.log("hello")
-          //   this.canvas?.renderAll()
-          // })
-          this.canvas?.add(obj);
-        }
-      });
-    };
-    draw(this.objects);
-    this.tempRefObj?.forEach((ref) => {
-      this.canvas?.add(ref);
-    });
-  }
+  // initializeObjcts(objects: any[]) {
+  //   fabric.util.enlivenObjects(
+  //     objects,
+  //     (createdObjs: Object[]) => {
+  //       this.canvasService.objects = createdObjs;
+  //       this.canvasService.reRender();
+  //     },
+  //     'fabric'
+  //   );
+  // }
+  // renderObjectsOnCanvas() {
+  //   this.canvasService.canvas?.clear();
+  //   this.canvasService.canvas?.setBackgroundColor(
+  //     this.app$?.canvasConfig.backgroungColor || '#282829',
+  //     () => {}
+  //   );
+  //   const draw = (objects: Object[]) => {
+  //     objects.forEach((obj) => {
+  //       if (obj.type === 'group') {
+  //         draw(obj._objects as Object[]);
+  //       } else {
+  //         this.canvasService.canvas?.add(obj);
+  //       }
+  //     });
+  //   };
+  //   draw(this.canvasService.objects);
+  //   this.canvasService.tempRefObj?.forEach((ref) => {
+  //     this.canvasService.canvas?.add(ref);
+  //   });
+  // }
 
   // this updateObjects takes to arguments object and method
   // method could be 0 or 1
-  // if 0 then object will replace last element of this.objects
-  // if 1 then object will be pushed to this.objects
+  // if 0 then object will replace last element of this.canvasService.objects
+  // if 1 then object will be pushed to this.canvasService.objects
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
-    if (!this.canvas) return;
+    if (!this.canvasService.canvas) return;
     // if (event.target) {
-    //   this.canvas.setActiveObject(event.target);
+    //   this.canvasService.canvas.setActiveObject(event.target);
     // }
     if (
       this.app$?.role &&
@@ -194,7 +194,7 @@ targetObjectStroke:string|undefined=''
       if (obj) {
         obj._id = uuidv4();
         this.currentDrawingObject = obj;
-        this.updateObjects(obj);
+        this.canvasService.updateObjects(obj);
         if (obj.type === 'i-text') {
           const text = obj as fabric.IText;
           text.enterEditing();
@@ -214,13 +214,13 @@ targetObjectStroke:string|undefined=''
           event.pointer!.x,
           event.pointer!.y,
         ]);
-        this.updateObjects(this.currentDrawingObject, 'popAndPush');
+        this.canvasService.updateObjects(this.currentDrawingObject, 'popAndPush');
       } else {
         const obj = this.createObjects(event, this.app$.role);
         if (obj) {
           obj._id = uuidv4();
           this.currentDrawingObject = obj;
-          this.updateObjects(obj);
+          this.canvasService.updateObjects(obj);
         }
       }
     }
@@ -228,7 +228,7 @@ targetObjectStroke:string|undefined=''
   onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
     if (this.app$?.role === 'select' && event.target?.type === 'path') {
       const path = event.target as fabric.Path & { _id: string };
-      this.tempRefObj = [];
+      this.canvasService.tempRefObj = [];
       path.path?.forEach((points, i) => {
         const arrPoint = points as unknown as number[];
         let ctrlOne = new fabric.Circle({
@@ -257,13 +257,13 @@ targetObjectStroke:string|undefined=''
             _refTo: fabric.Path;
             _refIndex: [number, number];
           });
-        this.canvas?.add(ctrlOne);
-        this.tempRefObj.push(ctrlOne as any);
+        this.canvasService.canvas?.add(ctrlOne);
+        this.canvasService.tempRefObj.push(ctrlOne as any);
         if (ctrlTwo) {
           ctrlTwo._refTo = path;
           ctrlTwo._refIndex = [i, 2];
-          this.canvas?.add(ctrlTwo);
-          this.tempRefObj.push(ctrlTwo as any);
+          this.canvasService.canvas?.add(ctrlTwo);
+          this.canvasService.tempRefObj.push(ctrlTwo as any);
         }
       });
     }
@@ -273,7 +273,7 @@ targetObjectStroke:string|undefined=''
       x: event.pointer?.x,
       y: event.pointer?.y,
     });
-    const obj = this.objects[this.objects.length - 1];
+    const obj = this.canvasService.objects[this.canvasService.objects.length - 1];
     if (!obj) return;
     if (
       this.isDrawing &&
@@ -318,7 +318,7 @@ targetObjectStroke:string|undefined=''
         default:
           break;
       }
-      this.updateObjects(obj, 'popAndPush');
+      this.canvasService.updateObjects(obj, 'popAndPush');
     }
     if (
       this.app$?.role === 'pen' &&
@@ -330,9 +330,9 @@ targetObjectStroke:string|undefined=''
       };
       if (!pen?.path || pen.isPathClosed) return;
 
-      this.reRender();
+      this.canvasService.reRender();
       const start = pen.path[pen.path.length - 1] as unknown as number[];
-      this.canvas?.add(
+      this.canvasService.canvas?.add(
         new fabric.Line(
           [
             start[3] || start[1],
@@ -350,7 +350,7 @@ targetObjectStroke:string|undefined=''
   }
 
   onMouseUp(event: fabric.IEvent<MouseEvent>): void {
-    if (!this.canvas) return;
+    if (!this.canvasService.canvas) return;
     this.isDrawing = false;
     this.isPathControlPointMoving = false;
 
@@ -376,7 +376,7 @@ targetObjectStroke:string|undefined=''
       // return;
     }
     // if(this.app$?.role==="text"){
-    // const text= this.objects[this.objects.length-1] as fabric.IText
+    // const text= this.canvasService.objects[this.canvasService.objects.length-1] as fabric.IText
     // text.enterEditing()
     // }
     if (
@@ -393,15 +393,15 @@ targetObjectStroke:string|undefined=''
     if (this.app$?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
-    this.updateObjects(path);
+    this.canvasService.updateObjects(path);
   }
-  reRender() {
-    this.socketService.emit(
-      'objects:modified',
-      this.canvas?.toObject().objects
-    );
-    this.objectsObserver?.next('objects');
-  }
+  // reRender() {
+  //   this.socketService.emit(
+  //     'objects:modified',
+  //     this.canvasService.canvas?.toObject().objects
+  //   );
+  //   this.objectsObserver?.next('objects');
+  // }
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
     if (!e.pointer) return;
     const { x, y } = e.pointer;
@@ -454,64 +454,64 @@ targetObjectStroke:string|undefined=''
   }
 
   setCurrentAction(role: Roles) {
-    if (!this.canvas) return;
+    if (!this.canvasService.canvas) return;
     this.store.dispatch(setRole({ role }));
     if (this.currentDrawingObject?.type === 'path') {
       this.loadSVGFromString(this.currentDrawingObject);
     }
     this.currentDrawingObject = undefined;
-    this.reRender();
+    this.canvasService.reRender();
     if (role === 'pencil') {
-      this.canvas.isDrawingMode = true;
+      this.canvasService.canvas.isDrawingMode = true;
     } else {
-      this.canvas.isDrawingMode = false;
+      this.canvasService.canvas.isDrawingMode = false;
     }
     if (role === 'select') {
       this.objectCustomization(true);
     } else {
       this.objectCustomization(false);
     }
-    this.tempRefObj = [];
+    this.canvasService.tempRefObj = [];
   }
 
   objectCustomization(arg: boolean) {
-    this.canvas?.getObjects().forEach((object) => {
+    this.canvasService.canvas?.getObjects().forEach((object) => {
       // Prevent customization:
       object.selectable = arg;
       object.evented = arg;
     });
-    this.canvas?.renderAll();
+    this.canvasService.canvas?.renderAll();
   }
 
   loadSVGFromString(data: Object) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
       const newPath = str[0] as Object;
       newPath._id = uuidv4();
-      this.updateObjects(newPath, 'popAndPush');
+      this.canvasService.updateObjects(newPath, 'popAndPush');
       this.currentDrawingObject = undefined;
       this.setCurrentAction('select');
     });
   }
-  updateObjects(
-    object: Object | Object[],
-    method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
-  ) {
-    if (method === 'reset' && Array.isArray(object)) {
-      this.objects = [...object];
-    }
+  // updateObjects(
+  //   object: Object | Object[],
+  //   method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
+  // ) {
+  //   if (method === 'reset' && Array.isArray(object)) {
+  //     this.canvasService.objects = [...object];
+  //   }
 
-    if (method === 'push' && !Array.isArray(object)) {
-      this.objects.push(object);
-    } else if (method === 'popAndPush' && !Array.isArray(object)) {
-      this.objects[this.objects.length - 1] = object;
-    } else if (method === 'replace' && !Array.isArray(object)) {
-      this.objects = this.objects.map((obj) => {
-        if (object._id === obj._id) {
-          return object;
-        }
-        return obj;
-      });
-    }
-    this.reRender();
-  }
+  //   if (method === 'push' && !Array.isArray(object)) {
+  //     this.canvasService.objects.push(object);
+  //   } else if (method === 'popAndPush' && !Array.isArray(object)) {
+  //     this.canvasService.objects[this.canvasService.objects.length - 1] = object;
+  //   } else if (method === 'replace' && !Array.isArray(object)) {
+  //     this.canvasService.objects = this.canvasService.objects.map((obj) => {
+  //       if (object._id === obj._id) {
+  //         return object;
+  //       }
+  //       return obj;
+  //     });
+  //   }
+  //   this.canvasService.reRender();
+  // }
 }
