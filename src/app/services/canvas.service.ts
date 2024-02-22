@@ -15,11 +15,23 @@ export class CanvasService {
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
   )[] = [];
 
+  currentDrawingObject: Object | undefined;
+
   selectedObj: fabric.Object[] = [];
 
-  constructor(private socketService: SocketService) { }
+  constructor(private socketService: SocketService) {
 
-  initializeObjcts(objects: any[]) {
+    new Observable((observer) => {
+      this.objectsObserver = observer;
+    })?.subscribe((arg) => {
+      if ('objects') {
+        this.renderObjectsOnCanvas();
+      }
+    });
+
+   }
+
+   enliveObjcts(objects: any[]) {
     fabric.util.enlivenObjects(
       objects,
       (createdObjs: Object[]) => {

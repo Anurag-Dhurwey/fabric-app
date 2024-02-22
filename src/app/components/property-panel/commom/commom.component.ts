@@ -10,9 +10,6 @@ import { CanvasService } from '../../../services/canvas.service';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
-  // @Input() objects: fabric.Object[] = [];
-  // @Output() reRender = new EventEmitter();
-  // @Input() canvas: fabric.Canvas | undefined;
   commonData: CommonProperty[] = [
     {
       title: 'Position',
@@ -100,12 +97,7 @@ export class CommomComponent {
     {
       title: 'Others',
       keys: [
-        {
-          lable: 'Background',
-          key: 'backgroundColor',
-          val_type: 'string',
-          inputBox_type: 'color',
-        },
+       
         {
           lable: 'Fill',
           key: 'fill',
@@ -121,27 +113,33 @@ export class CommomComponent {
           min: 0,
           max: 1,
         },
+        {
+          lable: 'Background',
+          key: 'backgroundColor',
+          val_type: 'string',
+          inputBox_type: 'color',
+        },
       ],
     },
   ];
-constructor(public canvasService: CanvasService){
 
-}
-  
+  constructor(public canvasService: CanvasService) {}
 
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
     const value = this.extractValueFromTarget(target);
-    console.log(this.canvasService.selectedObj[0]);
     if (value !== null && this.canvasService.selectedObj?.length === 1) {
-      this.canvasService.selectedObj[0].set(target.name as keyof fabric.Object, value);
+      this.canvasService.selectedObj.forEach(obj=>{
+        obj.set(
+          target.name as keyof fabric.Object,
+          value
+        );
+      })
       this.canvasService.canvas?.renderAll();
-      // this.canvasService.canvas?.setActiveObject(this.canvasService.selectedObj[0]);
     }
   }
 
   extractValueFromTarget(target: HTMLInputElement) {
-    // console.log(target.name);
     if (
       [
         'top',
@@ -155,7 +153,7 @@ constructor(public canvasService: CanvasService){
         'opacity',
       ].includes(target.name)
     ) {
-      return parseFloat(target.value);
+      return Math.floor(parseFloat(target.value));
     } else if (['flipX', 'flipY'].includes(target.name)) {
       return target.checked;
     } else {

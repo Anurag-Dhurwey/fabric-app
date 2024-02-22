@@ -26,9 +26,11 @@
 <div class="propertyBar">
   @if(canvasService.selectedObj.length){
   <h4 style="margin: 0px">
-    @for (item of canvasService.selectedObj; track $index) {
-    <span style="padding: 0px 5px">{{ item.type }}</span>
-    }
+    <span style="padding: 0px 5px">{{
+      canvasService.selectedObj.length > 1
+        ? "Group"
+        : canvasService.selectedObj[0].type
+    }}</span>
   </h4>
   <app-commom />
   }

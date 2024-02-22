@@ -77,7 +77,7 @@
   <app-property-panel />
 
   <canvas id="canvas"></canvas>
-  @for (item of presense; track $index) {
+  @for (item of socketService.presense; track $index) {
   <div
     [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"
     id="mouse"
