@@ -6,7 +6,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { appSelector } from './store/selectors/app.selector';
 import { appState } from './store/reducers/state.reducer';
 import { setRole } from './store/actions/state.action';
-import { Roles, Object, Presense} from '../types/app.types';
+import { Roles, Object, Presense } from '../types/app.types';
 import { fabric } from 'fabric';
 import { Observable, Subscriber } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -44,7 +44,7 @@ export class AppComponent implements OnInit {
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
   private store = inject(Store);
-
+targetObjectStroke:string|undefined=''
   constructor(private socketService: SocketService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
@@ -64,7 +64,20 @@ export class AppComponent implements OnInit {
       this.canvas?.setHeight(window.innerHeight);
       this.canvas?.setWidth(window.innerWidth);
     });
-    // this.canvas.on('mouse:over', (event) => console.log(event));
+    
+    this.canvas.on('mouse:over', (event) => {
+      if(event.target ){
+        this.targetObjectStroke=event.target.stroke
+        event.target?.set('stroke', 'aqua')
+        this.canvas?.renderAll();
+      } 
+    });
+    this.canvas.on('mouse:out', (event) => {
+      if(event.target ){
+        event.target?.set('stroke', this.targetObjectStroke)
+        this.canvas?.renderAll();
+      } 
+    });
     this.canvas.on('mouse:down', (event) => this.onMouseDown(event));
     this.canvas.on('mouse:dblclick', (event) => this.onMouseDoubleClick(event));
     this.canvas.on('mouse:move', (event) => this.onMouseMove(event));
@@ -145,11 +158,16 @@ export class AppComponent implements OnInit {
         if (obj.type === 'group') {
           draw(obj._objects as Object[]);
         } else {
+          // obj.on('mouse:over',(e)=>{
+          //   e.target?.set('stroke','aqua')
+          //   console.log("hello")
+          //   this.canvas?.renderAll()
+          // })
           this.canvas?.add(obj);
         }
       });
     };
-    draw(this.objects)
+    draw(this.objects);
     this.tempRefObj?.forEach((ref) => {
       this.canvas?.add(ref);
     });
@@ -162,9 +180,9 @@ export class AppComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvas) return;
-    if(event.target){
-this.canvas.setActiveObject(event.target)
-    }
+    // if (event.target) {
+    //   this.canvas.setActiveObject(event.target);
+    // }
     if (
       this.app$?.role &&
       this.app$.role != 'select' &&
@@ -175,7 +193,6 @@ this.canvas.setActiveObject(event.target)
       const obj = this.createObjects(event, this.app$.role);
       if (obj) {
         obj._id = uuidv4();
-        // console.log(obj._id)
         this.currentDrawingObject = obj;
         this.updateObjects(obj);
         if (obj.type === 'i-text') {
