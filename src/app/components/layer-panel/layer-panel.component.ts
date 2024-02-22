@@ -61,7 +61,15 @@ export class LayerPanelComponent implements OnInit {
         traversed.push(...pre);
         if (pre.some((ele) => ele._id === object._id)) {
           traversed = traversed.filter((ele) => ele._id !== object._id);
-        } 
+        }
+        const ids: string[] = [];
+        traversed = traversed.filter((tra) => {
+          if (!ids.includes(tra._id)) {
+            ids.push(tra._id);
+            return true;
+          }
+          return false;
+        });
       }
     }
     if (traversed.length) {
@@ -73,7 +81,7 @@ export class LayerPanelComponent implements OnInit {
       this.canvas?.setActiveObject(select);
       this.canvas?.requestRenderAll();
     } else {
-      console.log("traversed" + 'is empty');
+      console.log('traversed' + 'is empty');
     }
   }
   onLeftClick(e: MouseEvent, data: Object) {
