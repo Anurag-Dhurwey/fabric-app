@@ -12,7 +12,6 @@ import { Store } from '@ngrx/store';
 import { appState } from '../../store/reducers/state.reducer';
 import { appSelector } from '../../store/selectors/app.selector';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
 import { Object } from '../../../types/app.types';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -24,7 +23,7 @@ import { CanvasService } from '../../services/canvas.service';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.css',
 })
