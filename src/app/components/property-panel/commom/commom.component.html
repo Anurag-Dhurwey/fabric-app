@@ -69,7 +69,7 @@
       <label [for]="key.key">
         {{ key.lable }}
       </label>
-     @if(canvasService.selectedObj[0][key.key]){
+     <!-- @if(canvasService.selectedObj[0][key.key]){ -->
       <input
       [max]="key.max"
       [min]="key.min"
@@ -82,9 +82,9 @@
       [value]="canvasService.selectedObj[0][key.key]"
       [checked]="canvasService.selectedObj[0][key.key]"
     />
-     }@else {
+     <!-- }@else {
       <button id="add-remove" class="material-symbols-outlined">add</button>
-     }
+     } -->
     </span>
     } }
   </div>
