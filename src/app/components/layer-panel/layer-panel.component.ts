@@ -1,5 +1,11 @@
-import { Component,  Input, OnInit } from '@angular/core';
-import { Group, Group_with_series, Object, Object_with_series, Position } from '../../../types/app.types';
+import { Component, Input, OnInit } from '@angular/core';
+import {
+  Group,
+  Group_with_series,
+  Object,
+  Object_with_series,
+  Position,
+} from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
@@ -15,7 +21,7 @@ import { CanvasService } from '../../services/canvas.service';
 })
 export class LayerPanelComponent implements OnInit {
   // @Input() canvas: fabric.Canvas | undefined;
-  // @Input() objects: Object[] | undefined;
+  // @Input() parent_Group_Id: string | undefined;
   @Input() layers: Object[] | undefined;
   // @Output() reRender = new EventEmitter<any>();
   // @Output() updateObjects = new EventEmitter<{
@@ -29,12 +35,28 @@ export class LayerPanelComponent implements OnInit {
       this.context_menu = null;
     });
   }
+
+  traveseAndSetToAll(objects: Object[], property: keyof Object, value: any) {
+    objects.forEach((obj) => {
+      obj[property] = value;
+      if (obj.type === 'group') {
+        this.traveseAndSetToAll(obj._objects, property, value);
+      }
+    });
+  }
+
   toggleVisibility(obj: Object, arg?: boolean) {
     obj.visible = arg !== undefined ? arg : !obj.visible;
+    if (obj.type === 'group') {
+      this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
+    }
     this.canvasService.reRender();
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
+    if (obj.type === 'group') {
+      this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
+    }
     this.canvasService.reRender();
   }
   setActiveSelection(e: MouseEvent, object: Object) {
@@ -152,7 +174,6 @@ export class LayerPanelComponent implements OnInit {
       return found; // Return whether the element was found
     }
 
-
     // Function to create and insert a group at the specified position
     function createAndInsertGroup(
       rootArray: Object_with_series[],
@@ -194,7 +215,9 @@ export class LayerPanelComponent implements OnInit {
       };
       newGroup._objects = selectedElements;
       // Function to recursively insert the new group
-      const insertGroup = (array: Object_with_series[]): Object_with_series[] => {
+      const insertGroup = (
+        array: Object_with_series[]
+      ): Object_with_series[] => {
         return array.flatMap((element) => {
           if (element.type === 'group' && element._objects) {
             // Recursively insert the new group into sub-elements

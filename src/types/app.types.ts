@@ -8,7 +8,7 @@ export type Roles =
   | 'image'
   | 'text';
 
-export type Group = fabric.Group & { _objects: Object[]; type: 'group' };
+export type Group = fabric.Group & { _objects: Object[]; type: 'group' ;isMinimized?:boolean};
 
 export type Object = (
   | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
@@ -47,7 +47,7 @@ export type CommonProperty = {
 
 
 export type series = { series_index?: number };
-export type Group_with_series = fabric.Group & { _objects: Object_with_series[]; type: 'group' };
+export type Group_with_series = fabric.Group & { _objects: Object_with_series[]; type: 'group' ;isMinimized?:boolean};
 
 export type Object_with_series = (
   | (fabric.Path & { isPathClosed?: boolean; type: 'path' })

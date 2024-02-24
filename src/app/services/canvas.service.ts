@@ -52,7 +52,7 @@ export class CanvasService {
   }
 
   importJsonObjects(json: string) {
-    const objects = this.enliveObjcts(JSON.parse(json).objects,false);
+    const objects = this.enliveObjcts(JSON.parse(json).objects, false);
 
     if (!objects || !objects.length) return;
     try {
@@ -60,6 +60,7 @@ export class CanvasService {
         objects.forEach((obj) => {
           obj._id = v4();
           if (obj.type === 'group') {
+            obj.isMinimized=true
             changeId(obj._objects);
           }
         });
@@ -79,7 +80,7 @@ export class CanvasService {
         newGroup._objects = objects;
         this.objects = [newGroup, ...this.objects];
       }
-      this.reRender()
+      this.reRender();
     } catch (error) {
       alert('something went wrong');
     }

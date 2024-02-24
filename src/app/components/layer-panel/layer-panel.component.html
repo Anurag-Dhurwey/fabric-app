@@ -1,7 +1,7 @@
 <style>
   .independent-layer {
     padding: 5px 0px;
-    border: 2px solid  rgb(162, 160, 160);
+    border: 2px solid rgb(162, 160, 160);
     background-color: rgb(162, 160, 160);
     display: flex;
     justify-content: center;
@@ -50,16 +50,24 @@
   (onGroup)="createGroup()"
   [position]="context_menu"
 />
-}
-
-@for (obj of layers; track $index) { @if(obj.type==='group'){
+} @for (obj of layers; track $index) { @if(obj.type==='group'){
 
 <div class="group">
-  <div class="independent-layer" (click)="onLeftClick($event, obj)">
+  <div class="independent-layer" style="margin-bottom: 2px;">
     <span style="width: 15%" class="Triangle">
-      <button class="material-symbols-outlined">expand_more</button>
+      <button
+        (click)="
+          obj.isMinimized =
+            obj.isMinimized === undefined ? false : !obj.isMinimized
+        "
+        class="material-symbols-outlined"
+      >
+        {{ obj.isMinimized ? "expand_less" : "expand_more" }}
+      </button>
     </span>
-    <span style="width: 60%">{{ obj.type }}</span>
+    <span style="width: 60%" (click)="onLeftClick($event, obj)">{{
+      obj.type
+    }}</span>
     <span style="width: 25%">
       <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
         {{ obj.visible ? "visibility " : " visibility_off" }}
@@ -72,14 +80,14 @@
       </button>
     </span>
   </div>
-  <app-layer-panel
-    [layers]="obj._objects"
-  />
+  @if(obj.isMinimized===false){
+  <app-layer-panel [layers]="obj._objects" />
+  }
 </div>
 }@else {
 
 <div
-class="independent-layer"
+  class="independent-layer"
   (click)="onLeftClick($event, obj)"
   (contextmenu)="onRightClickAtLayer($event)"
 >
