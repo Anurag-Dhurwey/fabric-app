@@ -1,5 +1,5 @@
 import { Component,  Input, OnInit } from '@angular/core';
-import { Group, Object, Position } from '../../../types/app.types';
+import { Group, Group_with_series, Object, Object_with_series, Position } from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
@@ -49,7 +49,6 @@ export class LayerPanelComponent implements OnInit {
           }
         });
       } else {
-        console.log(item.left, ' ', item.top);
         if (item.type === 'group') {
           traverse(item._objects);
         } else {
@@ -101,16 +100,16 @@ export class LayerPanelComponent implements OnInit {
   }
 
   createGroup() {
-    function add_series_Property(objects: obj_with_series[]) {
+    function add_series_Property(objects: Object_with_series[]) {
       let count = 0;
 
-      function traverse(obj: obj_with_series) {
+      function traverse(obj: Object_with_series) {
         obj.series_index = count;
         count += 1;
 
         if (obj.type === 'group' && obj._objects) {
           obj._objects.forEach((subObj) => {
-            traverse(subObj as obj_with_series);
+            traverse(subObj as Object_with_series);
           });
         }
       }
@@ -152,26 +151,11 @@ export class LayerPanelComponent implements OnInit {
 
       return found; // Return whether the element was found
     }
-    type series = { series_index?: number };
-    // type group=Group&{_objects:obj_with_series[]}&series
-    // type obj_with_series = Object & group & series;
-    type group = fabric.Group & { _objects: obj_with_series[]; type: 'group' };
 
-    type obj_with_series = (
-      | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
-      | (fabric.Line & { type: 'line' })
-      | (fabric.Rect & { type: 'rect' })
-      | (fabric.Circle & { type: 'circle' })
-      | (fabric.Image & { type: 'image' })
-      | (fabric.IText & { type: 'i-text' })
-      | group
-    ) & {
-      _id: string;
-    } & series;
 
     // Function to create and insert a group at the specified position
     function createAndInsertGroup(
-      rootArray: obj_with_series[],
+      rootArray: Object_with_series[],
       selectedElements: Object[]
     ) {
       if (!selectedElements.length) return rootArray;
@@ -183,9 +167,9 @@ export class LayerPanelComponent implements OnInit {
       const seriesIndex = Math.min(
         ...selectedElements.map((element) => {
           const gets_i = (
-            arr: obj_with_series[],
+            arr: Object_with_series[],
             id: string
-          ): obj_with_series | undefined => {
+          ): Object_with_series | undefined => {
             for (const ele of arr) {
               if (ele._id === id) {
                 return ele;
@@ -205,12 +189,12 @@ export class LayerPanelComponent implements OnInit {
         series_index: seriesIndex,
         top: selectedElements[0].top,
         left: selectedElements[0].left,
-      } as IGroupOptions).setCoords() as group & {
+      } as IGroupOptions).setCoords() as Group_with_series & {
         _id: string;
       };
       newGroup._objects = selectedElements;
       // Function to recursively insert the new group
-      const insertGroup = (array: obj_with_series[]): obj_with_series[] => {
+      const insertGroup = (array: Object_with_series[]): Object_with_series[] => {
         return array.flatMap((element) => {
           if (element.type === 'group' && element._objects) {
             // Recursively insert the new group into sub-elements

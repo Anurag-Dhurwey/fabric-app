@@ -24,22 +24,23 @@ import { ExportComponent } from '../export/export.component';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
-  imports: [CommonModule,ExportComponent],
+  imports: [CommonModule, ExportComponent],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
   @Output() setCurrentAction = new EventEmitter<Roles>();
 
-  isExportComponentVisible:boolean=false
+  isExportComponentVisible: boolean = false;
 
   private store = inject(Store);
   app$: appState | undefined;
   setting: boolean = false;
 
-
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
-
+  @ViewChild('importInput') importInput:
+    | ElementRef<HTMLInputElement>
+    | undefined;
 
   constructor(private canvasService: CanvasService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
@@ -78,10 +79,22 @@ export class ToolBarComponent {
     }
   }
   export() {
-   this.isExportComponentVisible=!this.isExportComponentVisible
+    this.isExportComponentVisible = !this.isExportComponentVisible;
   }
-  import() {
-    console.log(this.canvasService.canvas?.toJSON());
+  import(files: FileList | null) {
+    if (files && files.length) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          typeof reader.result === 'string' &&
+            this.canvasService.importJsonObjects(reader.result);
+        } catch (error) {
+          console.error('json.parse error');
+        }
+      };
+      reader.readAsText(file)
+    }
   }
   toggleSetting(arg?: boolean) {
     this.setting = arg != undefined ? arg : !this.setting;

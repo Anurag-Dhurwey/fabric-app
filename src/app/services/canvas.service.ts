@@ -2,9 +2,11 @@ import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
 import { SocketService } from './socket.service';
 import { Observable, Subscriber } from 'rxjs';
-import { Object } from '../../types/app.types';
+import { Group_with_series, Object } from '../../types/app.types';
+import { v4 } from 'uuid';
+import { IGroupOptions } from 'fabric/fabric-impl';
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CanvasService {
   canvas: fabric.Canvas | undefined;
@@ -20,7 +22,6 @@ export class CanvasService {
   selectedObj: fabric.Object[] = [];
 
   constructor(private socketService: SocketService) {
-
     new Observable((observer) => {
       this.objectsObserver = observer;
     })?.subscribe((arg) => {
@@ -28,18 +29,60 @@ export class CanvasService {
         this.renderObjectsOnCanvas();
       }
     });
+  }
 
-   }
+  enliveObjcts(objects: any[], replace: boolean = true): Object[] | undefined {
+    let res: Object[] | undefined;
+    try {
+      fabric.util.enlivenObjects(
+        objects,
+        (createdObjs: Object[]) => {
+          if (replace) {
+            this.objects = createdObjs;
+            this.reRender();
+          }
+          res = createdObjs;
+        },
+        'fabric'
+      );
+    } catch (error) {
+      alert('something went wrong');
+    }
+    return res;
+  }
 
-   enliveObjcts(objects: any[]) {
-    fabric.util.enlivenObjects(
-      objects,
-      (createdObjs: Object[]) => {
-        this.objects = createdObjs;
-        this.reRender();
-      },
-      'fabric'
-    );
+  importJsonObjects(json: string) {
+    const objects = this.enliveObjcts(JSON.parse(json).objects,false);
+
+    if (!objects || !objects.length) return;
+    try {
+      function changeId(objects: Object[]) {
+        objects.forEach((obj) => {
+          obj._id = v4();
+          if (obj.type === 'group') {
+            changeId(obj._objects);
+          }
+        });
+      }
+      changeId(objects);
+
+      if (objects.length === 1 && objects[0].type === 'group') {
+        this.objects = [objects[0], ...this.objects];
+      } else {
+        const newGroup = new fabric.Group([], {
+          _id: v4(),
+          top: objects[0].top,
+          left: objects[0].left,
+        } as IGroupOptions) as Group_with_series & {
+          _id: string;
+        };
+        newGroup._objects = objects;
+        this.objects = [newGroup, ...this.objects];
+      }
+      this.reRender()
+    } catch (error) {
+      alert('something went wrong');
+    }
   }
 
   updateObjects(
@@ -65,12 +108,9 @@ export class CanvasService {
     this.reRender();
   }
 
-  renderObjectsOnCanvas(backgroungColor?:string) {
+  renderObjectsOnCanvas(backgroungColor?: string) {
     this.canvas?.clear();
-    this.canvas?.setBackgroundColor(
-      backgroungColor || '#282829',
-      () => {}
-    );
+    this.canvas?.setBackgroundColor(backgroungColor || '#282829', () => {});
     const draw = (objects: Object[]) => {
       objects.forEach((obj) => {
         if (obj.type === 'group') {
@@ -93,5 +133,4 @@ export class CanvasService {
     );
     this.objectsObserver?.next('objects');
   }
-
 }

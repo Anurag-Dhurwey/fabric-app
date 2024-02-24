@@ -1,9 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  HostListener,
-  Output,
-} from '@angular/core';
+import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 import { CanvasService } from '../../services/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
@@ -62,9 +57,10 @@ export class ExportComponent {
       pdf.addImage(dataImg, 'PNG', 0, 0, width!, height!);
       pdf.save(`${this.file_name || 'myDrawing'}`);
     } else if (this.file_type.value === 'JSON') {
-      const data = this.canvasService.canvas.toJSON();
-      // console.log(JSON.stringify(data.objects));
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const blob = new Blob(
+        [JSON.stringify(this.canvasService.canvas.toJSON())],
+        { type: 'application/json' }
+      );
       const url = URL.createObjectURL(blob);
       click(url);
       URL.revokeObjectURL(url);
@@ -72,7 +68,4 @@ export class ExportComponent {
       throw new Error('file type not recognized');
     }
   }
-
-  
-
 }

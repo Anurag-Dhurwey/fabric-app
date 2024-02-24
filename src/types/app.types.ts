@@ -41,3 +41,22 @@ export type CommonProperty = {
     step?: number;
   }[];
 };
+
+
+
+
+
+export type series = { series_index?: number };
+export type Group_with_series = fabric.Group & { _objects: Object_with_series[]; type: 'group' };
+
+export type Object_with_series = (
+  | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
+  | (fabric.Line & { type: 'line' })
+  | (fabric.Rect & { type: 'rect' })
+  | (fabric.Circle & { type: 'circle' })
+  | (fabric.Image & { type: 'image' })
+  | (fabric.IText & { type: 'i-text' })
+  | Group_with_series
+) & {
+  _id: string;
+} & series;
