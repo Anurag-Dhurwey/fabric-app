@@ -20,25 +20,27 @@ import {
 } from '../../store/actions/state.action';
 import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas.service';
+import { ExportComponent } from '../export/export.component';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,ExportComponent],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  // @Input() canvas: fabric.Canvas | undefined;
   @Output() setCurrentAction = new EventEmitter<Roles>();
-  // @Output() reRender = new EventEmitter<any>();
-  // @Output() updateObjects = new EventEmitter<{
-  //   object: Object | Object[];
-  //   method?: 'push';
-  // }>();
+
+  isExportComponentVisible:boolean=false
+
   private store = inject(Store);
   app$: appState | undefined;
   setting: boolean = false;
+
+
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
+
+
   constructor(private canvasService: CanvasService) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
@@ -75,7 +77,10 @@ export class ToolBarComponent {
       this.fileInput?.nativeElement.click();
     }
   }
-  exportCanvasObjectsToJson() {
+  export() {
+   this.isExportComponentVisible=!this.isExportComponentVisible
+  }
+  import() {
     console.log(this.canvasService.canvas?.toJSON());
   }
   toggleSetting(arg?: boolean) {

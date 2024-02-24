@@ -68,27 +68,19 @@
   }
 </div>
 
-
 <!-- this input will be trigger when user click on image role button  -->
 <input
   type="file"
   #fileInput
-  style="display: none;"
+  style="display: none"
   (change)="onImageInput(fileInput.files)"
 />
 
 <div>
-  <button
-    class="material-symbols-outlined"
-    (click)="exportCanvasObjectsToJson()"
-  >
+  <button class="material-symbols-outlined" (click)="export()">
     ios_share
   </button>
-  <button
-    id="importBtn"
-    class="material-symbols-outlined"
-    (click)="exportCanvasObjectsToJson()"
-  >
+  <button id="importBtn" class="material-symbols-outlined" (click)="import()">
     ios_share
   </button>
 </div>
@@ -124,3 +116,7 @@
     </div>
   </div>
 </div>
+
+@if(isExportComponentVisible){
+  <app-export (onCloseClick)="export()"/>
+}
