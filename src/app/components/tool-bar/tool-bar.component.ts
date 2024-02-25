@@ -21,10 +21,11 @@ import {
 import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas.service';
 import { ExportComponent } from '../export/export.component';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
-  imports: [CommonModule, ExportComponent],
+  imports: [CommonModule, ExportComponent, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.css',
 })
