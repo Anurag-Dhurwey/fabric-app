@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
@@ -9,8 +9,8 @@ import { setRole } from '../../store/actions/state.action';
 import { Roles, Object, Presense } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
-import { SocketService } from '../../services/socket.service';
-import { CanvasService } from '../../services/canvas.service';
+import { SocketService } from '../../services/socket/socket.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 import { LayerPanelComponent } from '../layer-panel/layer-panel.component';
 import { PropertyPanelComponent } from '../property-panel/property-panel.component';
 
@@ -28,6 +28,7 @@ import { PropertyPanelComponent } from '../property-panel/property-panel.compone
   styleUrl: './canvas.component.css',
 })
 export class CanvasComponent implements OnInit {
+  id: string | null = null;
   title = 'fabric app';
   app$: appState | undefined;
 
@@ -40,13 +41,16 @@ export class CanvasComponent implements OnInit {
   targetObjectStroke: string | undefined = '';
   constructor(
     public socketService: SocketService,
-    public canvasService: CanvasService
+    public canvasService: CanvasService,
+    private route: ActivatedRoute
   ) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
   ngOnInit(): void {
-    // this.socketService.connect();
+    this.socketService.connect();
+    this.id = this.route.snapshot.paramMap.get('id');
+  
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
@@ -90,46 +94,49 @@ export class CanvasComponent implements OnInit {
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvasService.canvas.on('object:moving', (event) => {
-      this.socketService.emit(
-        'objects:modified',
-        this.canvasService.canvas?.toObject().objects
-      );
+      this.id &&
+        this.socketService.emit('objects:modified', {
+          objects: this.canvasService.canvas?.toObject().objects,
+          roomId: this.id,
+        });
 
-      const target = event.target as
-        | (fabric.Circle & {
-            _refTo?: fabric.Path & { _id: string };
-            _refIndex?: [number, number];
-          })
-        | undefined;
-      if (target?._refTo?.path && target._refIndex) {
-        if (target._refIndex[1] === 1) {
-          // const ref = target._refTo;
-          // const arr = ref.path![target._refIndex[0]] as unknown as number[];
-          // arr[1] = event.pointer!.x;
-          // arr[2] = event.pointer!.y;
-          // this.canvasService.updateObjects(ref, 'replace');
-        } else if (target._refIndex[1] === 2) {
-          // const ref = target._refTo;
-          // const arr = ref.path![target._refIndex[0]] as unknown as number[];
-          // arr[3] = event.pointer!.x;
-          // arr[4] = event.pointer!.y;
-          // this.canvasService.updateObjects(ref, 'replace');
-        }
-      }
+      // const target = event.target as
+      //   | (fabric.Circle & {
+      //       _refTo?: fabric.Path & { _id: string };
+      //       _refIndex?: [number, number];
+      //     })
+      //   | undefined;
+      // if (target?._refTo?.path && target._refIndex) {
+      //   if (target._refIndex[1] === 1) {
+      //     // const ref = target._refTo;
+      //     // const arr = ref.path![target._refIndex[0]] as unknown as number[];
+      //     // arr[1] = event.pointer!.x;
+      //     // arr[2] = event.pointer!.y;
+      //     // this.canvasService.updateObjects(ref, 'replace');
+      //   } else if (target._refIndex[1] === 2) {
+      //     // const ref = target._refTo;
+      //     // const arr = ref.path![target._refIndex[0]] as unknown as number[];
+      //     // arr[3] = event.pointer!.x;
+      //     // arr[4] = event.pointer!.y;
+      //     // this.canvasService.updateObjects(ref, 'replace');
+      //   }
+      // }
     });
 
     this.socketService.on('objects:modified', (new_objects) => {
-      this.canvasService.enliveObjcts(new_objects);
+      // this.canvasService.enliveObjcts(new_objects, this.id);
+      console.log('modified')
     });
 
     this.socketService.on('objects', (objects) => {
-      this.canvasService.enliveObjcts(objects);
+      this.canvasService.enliveObjcts(objects, this.id);
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
       this.socketService.presense = data;
     });
 
-    this.socketService.emit('objects', {});
+    this.id && this.socketService.emit('objects', this.id);
+    this.id && this.socketService.emit('room:join', this.id);
   }
 
   // this updateObjects takes to arguments object and method
@@ -139,7 +146,7 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-
+    console.log(this.id);
     if (
       this.app$?.role &&
       this.app$.role != 'select' &&
@@ -151,7 +158,7 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         this.canvasService.currentDrawingObject = obj;
-        this.canvasService.updateObjects(obj);
+        this.canvasService.updateObjects(obj, this.id);
         if (obj.type === 'i-text') {
           const text = obj as fabric.IText;
           text.enterEditing();
@@ -174,6 +181,7 @@ export class CanvasComponent implements OnInit {
         ]);
         this.canvasService.updateObjects(
           this.canvasService.currentDrawingObject,
+          this.id,
           'popAndPush'
         );
       } else {
@@ -181,7 +189,7 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           this.canvasService.currentDrawingObject = obj;
-          this.canvasService.updateObjects(obj);
+          this.canvasService.updateObjects(obj, this.id);
         }
       }
     }
@@ -230,10 +238,14 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    this.socketService.emit('mouse:move', {
-      x: event.pointer?.x,
-      y: event.pointer?.y,
-    });
+    this.id &&
+      this.socketService.emit('mouse:move', {
+        position: {
+          x: event.pointer?.x,
+          y: event.pointer?.y,
+        },
+        roomId: this.id,
+      });
     const obj =
       this.canvasService.objects[this.canvasService.objects.length - 1];
     if (!obj) return;
@@ -280,7 +292,7 @@ export class CanvasComponent implements OnInit {
         default:
           break;
       }
-      this.canvasService.updateObjects(obj, 'popAndPush');
+      this.canvasService.updateObjects(obj, this.id, 'popAndPush');
     }
     if (
       this.app$?.role === 'pen' &&
@@ -293,7 +305,7 @@ export class CanvasComponent implements OnInit {
       };
       if (!pen?.path || pen.isPathClosed) return;
 
-      this.canvasService.reRender();
+      this.canvasService.reRender(this.id);
       const start = pen.path[pen.path.length - 1] as unknown as number[];
       this.canvasService.canvas?.add(
         new fabric.Line(
@@ -357,7 +369,7 @@ export class CanvasComponent implements OnInit {
     if (this.app$?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
-    this.canvasService.updateObjects(path);
+    this.canvasService.updateObjects(path, this.id);
   }
 
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
@@ -419,7 +431,7 @@ export class CanvasComponent implements OnInit {
       this.loadSVGFromString(this.canvasService.currentDrawingObject);
     }
     this.canvasService.currentDrawingObject = undefined;
-    this.canvasService.reRender();
+    this.canvasService.reRender(this.id);
     if (role === 'pencil') {
       this.canvasService.canvas.isDrawingMode = true;
     } else {
@@ -446,9 +458,14 @@ export class CanvasComponent implements OnInit {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
       const newPath = str[0] as Object;
       newPath._id = uuidv4();
-      this.canvasService.updateObjects(newPath, 'popAndPush');
+      this.canvasService.updateObjects(newPath, this.id, 'popAndPush');
       this.canvasService.currentDrawingObject = undefined;
       this.setCurrentAction('select');
     });
   }
+
+  ngOnDestroy(){
+    console.log("distroyed")
+  }
+
 }

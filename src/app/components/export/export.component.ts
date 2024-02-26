@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostListener, Output } from '@angular/core';
-import { CanvasService } from '../../services/canvas.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 @Component({

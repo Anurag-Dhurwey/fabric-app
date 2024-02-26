@@ -60,3 +60,20 @@ export type Object_with_series = (
 ) & {
   _id: string;
 } & series;
+
+
+
+
+
+
+
+
+
+
+
+export type Projects= {
+  background: string;
+  objects: Object[];
+  user: string;
+  version: string;
+}

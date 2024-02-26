@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonProperty } from '../../../../types/app.types';
-import { CanvasService } from '../../../services/canvas.service';
+import { CanvasService } from '../../../services/canvas/canvas.service';
 
 @Component({
   selector: 'app-commom',

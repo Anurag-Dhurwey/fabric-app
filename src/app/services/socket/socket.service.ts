@@ -1,7 +1,7 @@
 // socket.service.ts
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Presense } from '../../types/app.types';
+import { Presense } from '../../../types/app.types';
 
 @Injectable({
   providedIn: 'root',

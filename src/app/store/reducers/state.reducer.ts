@@ -1,27 +1,41 @@
 import { createReducer, on } from '@ngrx/store';
-import { setCanvasConfig, setRole } from '../actions/state.action';
-import { Roles } from '../../../types/app.types';
-export type CanvasConfig={
-  backgroungColor:string
-  width:number
-  height:number
-}
+import { setCanvasConfig, setProjects, setRole } from '../actions/state.action';
+import { Projects, Roles } from '../../../types/app.types';
+export type CanvasConfig = {
+  backgroungColor: string;
+  width: number;
+  height: number;
+};
 export type appState = {
   role: Roles;
-  canvasConfig:CanvasConfig
+  canvasConfig: CanvasConfig;
+  projects: Projects[];
 };
 
 const initialstate: appState = {
   role: 'select',
-  canvasConfig:{
-    backgroungColor:"#282829",
-    width:window.innerWidth,
-    height:window.innerHeight
-  }
+  canvasConfig: {
+    backgroungColor: '#282829',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  },
+  projects: [],
 };
 
 export const appReducer = createReducer(
   initialstate,
-  on(setRole, (state, { role }) => ({ ...state,role })),
-  on(setCanvasConfig, (state, props) => ({ ...state, canvasConfig:{...state.canvasConfig,...props} })),
+  on(setRole, (state, { role }) => ({ ...state, role })),
+  on(setCanvasConfig, (state, props) => ({
+    ...state,
+    canvasConfig: { ...state.canvasConfig, ...props },
+  })),
+  on(setProjects, (state, props) => {
+    if (props.method === 'reset' && Array.isArray(props.project)) {
+      return { ...state, projects: props.project };
+    } else if (props.method === 'push' && !Array.isArray(props.project)) {
+      return { ...state, projects: [...state.projects, props.project] };
+    } else {
+      return state;
+    }
+  })
 );

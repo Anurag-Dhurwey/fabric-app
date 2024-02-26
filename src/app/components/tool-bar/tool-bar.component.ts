@@ -19,7 +19,7 @@ import {
   setCanvasConfigProp,
 } from '../../store/actions/state.action';
 import { fabric } from 'fabric';
-import { CanvasService } from '../../services/canvas.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 import { ExportComponent } from '../export/export.component';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({

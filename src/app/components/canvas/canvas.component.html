@@ -73,7 +73,7 @@
   
   <main class="main">
     <app-tool-bar (setCurrentAction)="setCurrentAction($event)" />
-    <app-layer-panel [layers]="canvasService.objects" />
+    <app-layer-panel [layers]="canvasService.objects" [projectId]="id" />
     <app-property-panel />
   
     <canvas id="canvas"></canvas>

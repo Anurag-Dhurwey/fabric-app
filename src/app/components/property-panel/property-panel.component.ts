@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommomComponent } from './commom/commom.component';
-import { CanvasService } from '../../services/canvas.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 
 @Component({
   selector: 'app-property-panel',

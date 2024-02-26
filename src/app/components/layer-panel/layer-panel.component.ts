@@ -10,7 +10,7 @@ import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
-import { CanvasService } from '../../services/canvas.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 
 @Component({
   selector: 'app-layer-panel',
@@ -21,7 +21,7 @@ import { CanvasService } from '../../services/canvas.service';
 })
 export class LayerPanelComponent implements OnInit {
   // @Input() canvas: fabric.Canvas | undefined;
-  // @Input() parent_Group_Id: string | undefined;
+  @Input() projectId: string | null=null;
   @Input() layers: Object[] | undefined;
   // @Output() reRender = new EventEmitter<any>();
   // @Output() updateObjects = new EventEmitter<{
@@ -50,14 +50,14 @@ export class LayerPanelComponent implements OnInit {
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
     }
-    this.canvasService.reRender();
+    this.canvasService.reRender(this.projectId);
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
     }
-    this.canvasService.reRender();
+    this.canvasService.reRender(this.projectId);
   }
   setActiveSelection(e: MouseEvent, object: Object) {
     let traversed: Object[] = [];

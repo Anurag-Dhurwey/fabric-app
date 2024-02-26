@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Roles } from '../../../types/app.types';
+import { Projects, Roles } from '../../../types/app.types';
 
 
 
@@ -12,4 +12,11 @@ export type setCanvasConfigProp ={ backgroungColor?: string; width?: number; hei
 export const setCanvasConfig = createAction(
   '[Action Component] setCanvasConfig',
   props<setCanvasConfigProp>()
+);
+
+
+export type setProjectsProps={project:Projects[]|Projects,method:'reset'|'push'|'replace'}
+export const setProjects = createAction(
+  '[Action Component] setProjects',
+  props<setProjectsProps>()
 );

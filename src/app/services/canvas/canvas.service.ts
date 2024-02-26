@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
-import { SocketService } from './socket.service';
+import { SocketService } from '../socket/socket.service';
 import { Observable, Subscriber } from 'rxjs';
-import { Group_with_series, Object } from '../../types/app.types';
+import { Group_with_series, Object } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
 @Injectable({
@@ -31,7 +31,11 @@ export class CanvasService {
     });
   }
 
-  enliveObjcts(objects: any[], replace: boolean = true): Object[] | undefined {
+  enliveObjcts(
+    objects: any[],
+    projectId: string | null,
+    replace: boolean = true
+  ): Object[] | undefined {
     let res: Object[] | undefined;
     try {
       fabric.util.enlivenObjects(
@@ -39,7 +43,7 @@ export class CanvasService {
         (createdObjs: Object[]) => {
           if (replace) {
             this.objects = createdObjs;
-            this.reRender();
+            this.reRender(projectId);
           }
           res = createdObjs;
         },
@@ -52,7 +56,7 @@ export class CanvasService {
   }
 
   importJsonObjects(json: string) {
-    const objects = this.enliveObjcts(JSON.parse(json).objects, false);
+    const objects = this.enliveObjcts(JSON.parse(json).objects, null, false);
 
     if (!objects || !objects.length) return;
     try {
@@ -60,7 +64,7 @@ export class CanvasService {
         objects.forEach((obj) => {
           obj._id = v4();
           if (obj.type === 'group') {
-            obj.isMinimized=true
+            obj.isMinimized = true;
             changeId(obj._objects);
           }
         });
@@ -80,7 +84,7 @@ export class CanvasService {
         newGroup._objects = objects;
         this.objects = [newGroup, ...this.objects];
       }
-      this.reRender();
+      this.reRender(null);
     } catch (error) {
       alert('something went wrong');
     }
@@ -88,6 +92,7 @@ export class CanvasService {
 
   updateObjects(
     object: Object | Object[],
+    projectId: string | null,
     method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
   ) {
     if (method === 'reset' && Array.isArray(object)) {
@@ -106,7 +111,12 @@ export class CanvasService {
         return obj;
       });
     }
-    this.reRender();
+    this.reRender(projectId);
+    projectId &&
+      this.socketService.emit('objects:modified', {
+        roomId: projectId,
+        objects: this.canvas?.toObject().objects,
+      });
   }
 
   renderObjectsOnCanvas(backgroungColor?: string) {
@@ -127,11 +137,7 @@ export class CanvasService {
     });
   }
 
-  reRender() {
-    this.socketService.emit(
-      'objects:modified',
-      this.canvas?.toObject().objects
-    );
+  reRender(id: string | null) {
     this.objectsObserver?.next('objects');
   }
 }
