@@ -77,8 +77,8 @@
   <section>
     <div class="directry">
       @for (project of app$?.projects; track $index) {
-      <div [routerLink]="'/canvas/'+project.user" class="card" [style]="{ backgroundColor: 'dimgray' }">
-        <p>{{ project.user }}</p>
+      <div [routerLink]="'/canvas/'+project.id" class="card" [style]="{ backgroundColor: 'dimgray' }">
+        <p>{{ project.id }}</p>
       </div>
       } @empty {
       <div class="card" [style]="{ backgroundColor: 'white' }">

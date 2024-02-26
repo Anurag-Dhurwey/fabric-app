@@ -50,7 +50,7 @@ export class CanvasComponent implements OnInit {
   ngOnInit(): void {
     this.socketService.connect();
     this.id = this.route.snapshot.paramMap.get('id');
-  
+
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
     board.height = window.innerHeight;
@@ -124,15 +124,17 @@ export class CanvasComponent implements OnInit {
     });
 
     this.socketService.on('objects:modified', (new_objects) => {
-      // this.canvasService.enliveObjcts(new_objects, this.id);
-      console.log('modified')
+      this.canvasService.enliveObjcts(new_objects, this.id);
+      console.log('modified');
     });
 
     this.socketService.on('objects', (objects) => {
       this.canvasService.enliveObjcts(objects, this.id);
     });
     this.socketService.on('mouse:move', (data: Presense[]) => {
-      this.socketService.presense = data;
+      this.socketService.presense = data.filter(
+        (pre) => pre.id !== this.socketService.socket?.id
+      );
     });
 
     this.id && this.socketService.emit('objects', this.id);
@@ -464,8 +466,7 @@ export class CanvasComponent implements OnInit {
     });
   }
 
-  ngOnDestroy(){
-    console.log("distroyed")
+  ngOnDestroy() {
+    console.log('distroyed');
   }
-
 }

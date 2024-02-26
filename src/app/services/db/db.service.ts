@@ -59,7 +59,7 @@ export class DbService {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      projects.push(data as any);
+      projects.push({ ...data, id: doc.id } as Projects);
     });
     return projects;
   }

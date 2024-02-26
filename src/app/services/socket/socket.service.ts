@@ -12,7 +12,9 @@ export class SocketService {
   constructor() {}
 
   connect() {
-    this.socket = io('http://localhost:4000'); // Change the URL to your Socket.IO server
+    if (!this.socket?.connected) {
+      this.socket = io('http://localhost:4000');
+    }
   }
 
   // Emit an event to the server

@@ -53,6 +53,7 @@ export class DashboardComponent implements OnInit {
         this.store.dispatch(
           setProjects({ project: projects, method: 'reset' })
         );
+      console.log(projects)  
     }
   }
 
