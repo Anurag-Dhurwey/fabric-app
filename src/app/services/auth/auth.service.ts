@@ -9,7 +9,6 @@ import {
 } from 'firebase/auth';
 import { Router } from '@angular/router';
 import { DbService } from '../db/db.service';
-// import { app } from '../../firebase.config';
 @Injectable({
   providedIn: 'root',
 })
@@ -17,40 +16,12 @@ export class AuthService {
   constructor(private router: Router, private dbService: DbService) {}
   auth = getAuth(this.dbService.app);
 
-  signUp() {
-    createUserWithEmailAndPassword(
-      this.auth,
-      'anuragdhurwey046@gmail.com',
-      '100249'
-    )
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log({ user });
-        this.router.navigate(['/dashboard']);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log({ errorMessage });
-      });
+  async signUp(email: string, pass: string) {
+    await createUserWithEmailAndPassword(this.auth, email, pass);
   }
 
-  signIn() {
-    signInWithEmailAndPassword(
-      this.auth,
-      'anuragdhurwey046@gmail.com',
-      '100249'
-    )
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log({ user });
-        this.router.navigate(['/dashboard']);
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log({ errorMessage });
-      });
+  async signIn(email: string, pass: string) {
+    await signInWithEmailAndPassword(this.auth, email, pass);
   }
 
   whenAuthStateChange(cb: (user: User | null) => void) {
@@ -60,11 +31,6 @@ export class AuthService {
   }
 
   async signOutUser() {
-    try {
-      await signOut(this.auth);
-      this.router.navigate(['/sign-in']);
-    } catch (error) {
-      console.error(error);
-    }
+    await signOut(this.auth);
   }
 }

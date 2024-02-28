@@ -57,14 +57,13 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  signUp() {
-    this.authService.signUp();
-  }
-  signIn() {
-    this.authService.signIn();
-  }
-  signOut() {
-    this.authService.signOutUser();
+ async signOut() {
+    try {
+      await this.authService.signOutUser();
+      this.router.navigate(['/sign-in']);
+    } catch (error) {
+      
+    }
   }
 
   async createProject() {

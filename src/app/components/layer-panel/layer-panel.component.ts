@@ -20,15 +20,12 @@ import { CanvasService } from '../../services/canvas/canvas.service';
   styleUrl: './layer-panel.component.css',
 })
 export class LayerPanelComponent implements OnInit {
-  // @Input() canvas: fabric.Canvas | undefined;
-  @Input() projectId: string | null=null;
+  
+  @Input() projectId: string | null = null;
   @Input() layers: Object[] | undefined;
-  // @Output() reRender = new EventEmitter<any>();
-  // @Output() updateObjects = new EventEmitter<{
-  //   object: Object[];
-  //   method?: 'reset';
-  // }>();
+
   constructor(public canvasService: CanvasService) {}
+
   context_menu: Position | null = null;
   ngOnInit(): void {
     document.addEventListener('click', () => {
@@ -47,6 +44,7 @@ export class LayerPanelComponent implements OnInit {
 
   toggleVisibility(obj: Object, arg?: boolean) {
     obj.visible = arg !== undefined ? arg : !obj.visible;
+    obj.evented = arg !== undefined ? arg : !obj.evented;
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
     }
@@ -54,6 +52,7 @@ export class LayerPanelComponent implements OnInit {
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
+    obj.evented = arg !== undefined ? arg : !obj.evented;
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
     }

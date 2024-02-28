@@ -28,10 +28,7 @@ export type Object = (
 
 export type Position = { x: number; y: number };
 export type Presense = { id: string; mouse: Position; expire: number };
-export type TextArea = {
-  position: Position | null;
-  value: string;
-};
+
 
 export type CommonProperty = {
   title: string;
@@ -72,3 +69,8 @@ export type Projects = {
   user: string;
   version: string;
 };
+
+
+
+export type SocketEmitEvents='room:join'|'room:leave'|'objects'|'objects:modified'|'mouse:move'
+export type SocketOnEvents='room:joined'|'room:left'|'objects'|'objects:modified'|'mouse:move'

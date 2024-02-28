@@ -36,7 +36,8 @@ export class ToolBarComponent {
 
   private store = inject(Store);
   app$: appState | undefined;
-  setting: boolean = false;
+  isSettingVisible: boolean = false;
+  isMenuVisible:boolean=false
 
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
   @ViewChild('importInput') importInput:
@@ -97,9 +98,9 @@ export class ToolBarComponent {
       reader.readAsText(file)
     }
   }
-  toggleSetting(arg?: boolean) {
-    this.setting = arg != undefined ? arg : !this.setting;
-  }
+  // toggleSetting(arg?: boolean) {
+  //   this.setting = arg != undefined ? arg : !this.setting;
+  // }
 
   setCanvasBackground(color: string | null) {
     color && this.configCanvas({ backgroungColor: color });

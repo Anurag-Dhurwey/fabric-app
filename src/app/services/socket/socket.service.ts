@@ -1,7 +1,7 @@
 // socket.service.ts
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Presense } from '../../../types/app.types';
+import { Presense, SocketEmitEvents, SocketOnEvents } from '../../../types/app.types';
 
 @Injectable({
   providedIn: 'root',
@@ -18,12 +18,15 @@ export class SocketService {
   }
 
   // Emit an event to the server
-  emit(event: string, data: any) {
+  emit(event: SocketEmitEvents, data: any) {
     this.socket?.emit(event, data);
   }
 
   // Listen for events from the server
-  on(event: string, callback: (data: any) => void) {
+  on(event: SocketOnEvents, callback: (data: any) => void) {
     this.socket?.on(event, callback);
   }
 }
+
+
+

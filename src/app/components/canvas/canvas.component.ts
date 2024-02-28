@@ -148,7 +148,6 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    console.log(this.id);
     if (
       this.app$?.role &&
       this.app$.role != 'select' &&
@@ -467,6 +466,7 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    console.log('distroyed');
+    this.socketService.socket?.off();
+    this.id && this.socketService.emit('room:leave', this.id);
   }
 }

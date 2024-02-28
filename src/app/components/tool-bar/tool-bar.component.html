@@ -54,13 +54,43 @@
     border-radius: 5px;
     background: transparent;
   }
+  .menu {
+    cursor: default;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 10px 5px;
+    font-size: small;
+    background-color: gray;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+  .menu > button {
+    width: 100%;
+  }
 </style>
 
-<div>
-  <a routerLink="/dashboard" routerLinkActive="active" class="material-symbols-outlined">
-   menu
-  </a>
-
+<div class="menuIcon">
+  <button
+    (click)="isMenuVisible = !isMenuVisible"
+    class="material-symbols-outlined"
+  >
+    menu
+  </button>
+  <div class="menu" [style]="{ display: isMenuVisible ? 'flex' : 'none' }">
+    <button>new project</button>
+    <button>reset</button>
+    <button routerLink="/dashboard" routerLinkActive="active">Dashboard</button>
+    <button
+      class="material-symbols-outlined"
+      (click)="isMenuVisible = !isMenuVisible"
+    >
+      close
+    </button>
+  </div>
 </div>
 <div>
   @for (role of roles; track $index) {
@@ -107,22 +137,22 @@
   </button>
 </div>
 <div id="setting">
-  <button class="material-symbols-outlined" (click)="toggleSetting(true)">
+  <button
+    class="material-symbols-outlined"
+    (click)="isSettingVisible = !isSettingVisible"
+  >
     settings_b_roll
   </button>
-  <div id="settingPanel" [style]="{ display: setting ? 'block' : 'none' }">
-    <div>
+  <div
+    id="settingPanel"
+    [style]="{ display: isSettingVisible ? 'block' : 'none' }"
+  >
+    <!-- <div>
       <span style="width: 15%">
-        <button
-          style="font-size: small"
-          (click)="toggleSetting(false)"
-          class="material-symbols-outlined"
-        >
-          close
-        </button></span
+      </span
       >
       <span style="width: 85%; justify-content: center">Configration</span>
-    </div>
+    </div> -->
     <div>
       <span>
         <label for="background-color">Background</label>
@@ -136,6 +166,13 @@
         />
       </span>
     </div>
+    <button
+      style="font-size: small; width: 100%; margin: 5px 0px;"
+      (click)="isSettingVisible = !isSettingVisible"
+      class="material-symbols-outlined"
+    >
+      close
+    </button>
   </div>
 </div>
 

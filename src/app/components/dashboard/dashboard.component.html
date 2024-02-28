@@ -18,6 +18,49 @@
     height: 100%;
     position: sticky;
   }
+  .menubar button {
+    background: none;
+    outline: none;
+    border: none;
+    cursor: pointer;
+  }
+  .menubar .top .icon {
+    font-size: xx-large;
+  }
+
+  .account_menu {
+    display: none;
+    cursor: default;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 10px 5px;
+    font-size: small;
+    background-color: gray;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+  .menubar .profile_icon:hover .account_menu {
+    display: flex;
+  }
+
+  .account_menu > button {
+    border-bottom: 2px solid black;
+    cursor: pointer;
+  }
+
+  .menubar .top {
+    height: 75px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgb(62, 122, 120);
+    border-radius: 0px 0px 10px 10px;
+  }
   .dashboard .directry {
     width: 100vw;
     height: 45vh;
@@ -71,13 +114,35 @@
 <main class="dashboard">
   <section class="menu">
     <div class="menubar">
-      <button (click)="createProject()">canvas ground</button>
+      <div class="top">
+        <button
+          id="icon"
+          class="material-symbols-outlined"
+          (click)="createProject()"
+        >
+          add
+        </button>
+        <span class="profile_icon" style="position: relative">
+          <button id="icon" class="material-symbols-outlined">
+            account_circle
+          </button>
+          <span class="account_menu">
+            <button>Profle</button>
+            <button (click)="signOut()">Signout</button>
+          </span>
+        </span>
+      </div>
+      <div class="bottom"></div>
     </div>
   </section>
   <section>
     <div class="directry">
       @for (project of app$?.projects; track $index) {
-      <div [routerLink]="'/canvas/'+project.id" class="card" [style]="{ backgroundColor: 'dimgray' }">
+      <div
+        [routerLink]="'/canvas/' + project.id"
+        class="card"
+        [style]="{ backgroundColor: 'dimgray' }"
+      >
         <p>{{ project.id }}</p>
       </div>
       } @empty {

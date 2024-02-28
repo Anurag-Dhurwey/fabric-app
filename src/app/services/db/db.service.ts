@@ -23,7 +23,7 @@ import { Projects } from '../../../types/app.types';
 export class DbService {
   app;
   store;
-  private auth;
+   auth;
   constructor(private socketService: SocketService) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
