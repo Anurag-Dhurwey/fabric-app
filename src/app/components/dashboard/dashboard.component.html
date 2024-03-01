@@ -24,9 +24,7 @@
     border: none;
     cursor: pointer;
   }
-  .menubar .top .icon {
-    font-size: xx-large;
-  }
+
 
   .account_menu {
     display: none;
@@ -53,13 +51,16 @@
   }
 
   .menubar .top {
-    height: 75px;
+    height: 50px !important;
     width: 100%;
     display: flex;
     justify-content: space-around;
     align-items: center;
     background-color: rgb(62, 122, 120);
     border-radius: 0px 0px 10px 10px;
+  }
+  .menubar .top #icon {
+    font-size: 25px !important;
   }
   .dashboard .directry {
     width: 100vw;
@@ -108,6 +109,12 @@
       width: 80vw;
       height: 50vh;
     }
+     .menubar .top{
+      height: 75px !important;
+    }
+    .menubar .top #icon {
+    font-size: 50px !important;
+  }
   }
 </style>
 

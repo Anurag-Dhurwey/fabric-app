@@ -64,8 +64,8 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.socketService.connect();
     this.id = this.route.snapshot.paramMap.get('id');
+    this.id&& this.socketService.connect();
 
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
