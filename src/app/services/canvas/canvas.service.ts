@@ -5,6 +5,7 @@ import { Observable, Subscriber } from 'rxjs';
 import { Group_with_series, Object } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
+import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
 })
@@ -21,7 +22,10 @@ export class CanvasService {
 
   selectedObj: fabric.Object[] = [];
 
-  constructor(private socketService: SocketService) {
+  constructor(
+    private socketService: SocketService,
+    private authService: AuthService
+  ) {
     new Observable((observer) => {
       this.objectsObserver = observer;
     })?.subscribe((arg) => {
@@ -112,11 +116,12 @@ export class CanvasService {
       });
     }
     this.reRender(projectId);
-    projectId &&
+    if (projectId && this.authService.auth.currentUser) {
       this.socketService.emit('objects:modified', {
         roomId: projectId,
         objects: this.canvas?.toObject().objects,
       });
+    }
   }
 
   renderObjectsOnCanvas(backgroungColor?: string) {

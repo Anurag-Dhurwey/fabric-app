@@ -90,11 +90,11 @@
 <main class="main">
   <app-tool-bar (setCurrentAction)="setCurrentAction($event)" />
   @if(app$?.isExportComponentVisible){
-    <app-export  />
-    }
+  <app-export />
+  }
   <app-layer-panel [layers]="canvasService.objects" [projectId]="id" />
   <app-property-panel />
-  @if(!socketService.socket?.connected){
+  @if(id&&authService.auth.currentUser&& !socketService.socket?.connected){
   <div class="loader">
     <h3>Connecting to server</h3>
   </div>

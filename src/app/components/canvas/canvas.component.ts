@@ -14,6 +14,7 @@ import { CanvasService } from '../../services/canvas/canvas.service';
 import { LayerPanelComponent } from '../layer-panel/layer-panel.component';
 import { PropertyPanelComponent } from '../property-panel/property-panel.component';
 import { ExportComponent } from '../export/export.component';
+import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   selector: 'app-canvas',
@@ -24,7 +25,7 @@ import { ExportComponent } from '../export/export.component';
     ToolBarComponent,
     LayerPanelComponent,
     PropertyPanelComponent,
-    ExportComponent
+    ExportComponent,
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',
@@ -47,6 +48,7 @@ export class CanvasComponent implements OnInit {
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
+    public authService: AuthService,
     private route: ActivatedRoute
   ) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
@@ -67,7 +69,32 @@ export class CanvasComponent implements OnInit {
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get('id');
-    this.id&& this.socketService.connect();
+    if (this.authService.auth.currentUser && this.id) {
+      this.socketService.connect();
+      this.canvasService.canvas?.on('object:moving', (event) => {
+        this.socketService.emit('objects:modified', {
+          objects: this.canvasService.canvas?.toObject().objects,
+          roomId: this.id,
+        });
+      });
+
+      this.socketService.on('objects:modified', (new_objects) => {
+        this.canvasService.enliveObjcts(new_objects, this.id);
+        console.log('modified');
+      });
+
+      this.socketService.on('objects', (objects) => {
+        this.canvasService.enliveObjcts(objects, this.id);
+      });
+      this.socketService.on('mouse:move', (data: Presense[]) => {
+        this.socketService.presense = data.filter(
+          (pre) => pre.id !== this.socketService.socket?.id
+        );
+      });
+
+      this.socketService.emit('objects', this.id);
+      this.socketService.emit('room:join', this.id);
+    }
 
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = window.innerWidth;
@@ -124,32 +151,6 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
-    this.canvasService.canvas.on('object:moving', (event) => {
-      this.id &&
-        this.socketService.emit('objects:modified', {
-          objects: this.canvasService.canvas?.toObject().objects,
-          roomId: this.id,
-        });
-    });
-
-
-
-    this.socketService.on('objects:modified', (new_objects) => {
-      this.canvasService.enliveObjcts(new_objects, this.id);
-      console.log('modified');
-    });
-
-    this.socketService.on('objects', (objects) => {
-      this.canvasService.enliveObjcts(objects, this.id);
-    });
-    this.socketService.on('mouse:move', (data: Presense[]) => {
-      this.socketService.presense = data.filter(
-        (pre) => pre.id !== this.socketService.socket?.id
-      );
-    });
-
-    this.id && this.socketService.emit('objects', this.id);
-    this.id && this.socketService.emit('room:join', this.id);
   }
 
   // this updateObjects takes to arguments object and method
@@ -252,7 +253,7 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    this.id &&
+    if (this.id && this.authService.auth.currentUser) {
       this.socketService.emit('mouse:move', {
         position: {
           x: event.pointer?.x,
@@ -260,6 +261,8 @@ export class CanvasComponent implements OnInit {
         },
         roomId: this.id,
       });
+    }
+
     const obj =
       this.canvasService.objects[this.canvasService.objects.length - 1];
     if (!obj) return;
