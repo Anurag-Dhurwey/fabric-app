@@ -1,5 +1,10 @@
 import { createReducer, on } from '@ngrx/store';
-import { setCanvasConfig, setProjects, setRole } from '../actions/state.action';
+import {
+  setCanvasConfig,
+  setExportComponentVisibility,
+  setProjects,
+  setRole,
+} from '../actions/state.action';
 import { Projects, Roles } from '../../../types/app.types';
 export type CanvasConfig = {
   backgroungColor: string;
@@ -10,6 +15,7 @@ export type appState = {
   role: Roles;
   canvasConfig: CanvasConfig;
   projects: Projects[];
+  isExportComponentVisible: boolean;
 };
 
 const initialstate: appState = {
@@ -20,6 +26,7 @@ const initialstate: appState = {
     height: window.innerHeight,
   },
   projects: [],
+  isExportComponentVisible: false,
 };
 
 export const appReducer = createReducer(
@@ -37,5 +44,9 @@ export const appReducer = createReducer(
     } else {
       return state;
     }
-  })
+  }),
+  on(setExportComponentVisibility, (state, { isExportComponentVisible }) => ({
+    ...state,
+    isExportComponentVisible,
+  }))
 );

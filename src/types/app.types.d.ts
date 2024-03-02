@@ -73,4 +73,4 @@ export type Projects = {
 
 
 export type SocketEmitEvents='room:join'|'room:leave'|'objects'|'objects:modified'|'mouse:move'
-export type SocketOnEvents='room:joined'|'room:left'|'objects'|'objects:modified'|'mouse:move'
+export type SocketOnEvents='room:joined'|'room:left'|'objects'|'objects:modified'|'mouse:move'|"disconnect"|"connect"

@@ -13,6 +13,7 @@ import { SocketService } from '../../services/socket/socket.service';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { LayerPanelComponent } from '../layer-panel/layer-panel.component';
 import { PropertyPanelComponent } from '../property-panel/property-panel.component';
+import { ExportComponent } from '../export/export.component';
 
 @Component({
   selector: 'app-canvas',
@@ -23,6 +24,7 @@ import { PropertyPanelComponent } from '../property-panel/property-panel.compone
     ToolBarComponent,
     LayerPanelComponent,
     PropertyPanelComponent,
+    ExportComponent
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',
@@ -129,6 +131,8 @@ export class CanvasComponent implements OnInit {
           roomId: this.id,
         });
     });
+
+
 
     this.socketService.on('objects:modified', (new_objects) => {
       this.canvasService.enliveObjcts(new_objects, this.id);

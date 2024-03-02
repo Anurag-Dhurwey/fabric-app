@@ -9,6 +9,7 @@
     left: 0px;
     width: 100vw;
     height: 100vh;
+    background-color: rgba(1, 116, 142, 0.616);
   }
 
   .downloadFile {
@@ -70,11 +71,8 @@
       <option value="JSON">JSON</option>
     </select>
     <button (click)="exportFile()">Export</button>
-    <button (click)="onCloseClick.emit()">cancle</button>
-    <button
-      class="material-symbols-outlined closeBtn"
-      (click)="onCloseClick.emit()"
-    >
+    <button (click)="close(false)">cancle</button>
+    <button class="material-symbols-outlined closeBtn" (click)="close(false)">
       <!-- <IoClose className={styles.closeIcon} /> -->
       close
     </button>

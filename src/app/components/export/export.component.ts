@@ -1,7 +1,17 @@
-import { Component, EventEmitter, HostListener, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  HostListener,
+  Output,
+  inject,
+} from '@angular/core';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
+import { Store } from '@ngrx/store';
+import { appSelector } from '../../store/selectors/app.selector';
+import { appState } from '../../store/reducers/state.reducer';
+import { setExportComponentVisibility } from '../../store/actions/state.action';
 @Component({
   selector: 'app-export',
   standalone: true,
@@ -10,14 +20,17 @@ import jsPDF from 'jspdf';
   styleUrl: './export.component.css',
 })
 export class ExportComponent {
-  @Output() onCloseClick = new EventEmitter<any>();
-
+  private store = inject(Store);
+  // @Output() onCloseClick = new EventEmitter<any>();
+  app$: appState | undefined;
   file_name = new FormControl('');
   file_type = new FormControl('jpeg');
   windowWidth: number = window.innerWidth;
   windowHeight: number = window.innerHeight;
 
-  constructor(private canvasService: CanvasService) {}
+  constructor(private canvasService: CanvasService) {
+    this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+  }
 
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
@@ -67,5 +80,11 @@ export class ExportComponent {
     } else {
       throw new Error('file type not recognized');
     }
+  }
+
+  close(arg: boolean) {
+    this.store.dispatch(
+      setExportComponentVisibility({ isExportComponentVisible: arg })
+    );
   }
 }

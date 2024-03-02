@@ -20,3 +20,9 @@ export const setProjects = createAction(
   '[Action Component] setProjects',
   props<setProjectsProps>()
 );
+
+
+export const setExportComponentVisibility = createAction(
+  '[Action Component] setExportComponentVisibility',
+  props<{isExportComponentVisible:boolean}>()
+);

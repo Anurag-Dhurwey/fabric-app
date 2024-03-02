@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   setCanvasConfig,
   setCanvasConfigProp,
+  setExportComponentVisibility,
 } from '../../store/actions/state.action';
 import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas/canvas.service';
@@ -25,19 +26,24 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
-  imports: [CommonModule, ExportComponent, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [
+    CommonModule,
+    ExportComponent,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+  ],
   templateUrl: './tool-bar.component.html',
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
   @Output() setCurrentAction = new EventEmitter<Roles>();
 
-  isExportComponentVisible: boolean = false;
 
   private store = inject(Store);
   app$: appState | undefined;
   isSettingVisible: boolean = false;
-  isMenuVisible:boolean=false
+  isMenuVisible: boolean = false;
 
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
   @ViewChild('importInput') importInput:
@@ -81,7 +87,11 @@ export class ToolBarComponent {
     }
   }
   export() {
-    this.isExportComponentVisible = !this.isExportComponentVisible;
+    this.store.dispatch(
+      setExportComponentVisibility({
+        isExportComponentVisible: !this.app$?.isExportComponentVisible,
+      })
+    );
   }
   import(files: FileList | null) {
     if (files && files.length) {
@@ -95,7 +105,7 @@ export class ToolBarComponent {
           console.error('json.parse error');
         }
       };
-      reader.readAsText(file)
+      reader.readAsText(file);
     }
   }
   // toggleSetting(arg?: boolean) {
