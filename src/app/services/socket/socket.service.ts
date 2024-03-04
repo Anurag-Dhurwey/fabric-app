@@ -13,8 +13,8 @@ export class SocketService {
 
   connect() {
     if (!this.socket?.connected) {
-      // this.socket = io('http://localhost:4000');
-      this.socket = io('https://fabric-app-server.onrender.com');
+      this.socket = io('http://localhost:3000');
+      // this.socket = io('https://fabric-app-server.onrender.com');
     }
   }
 

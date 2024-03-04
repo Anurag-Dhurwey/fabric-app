@@ -38,7 +38,7 @@ export class CanvasService {
   enliveObjcts(
     objects: any[],
     projectId: string | null,
-    replace: boolean = true
+    replace: boolean = false
   ): Object[] | undefined {
     let res: Object[] | undefined;
     try {
@@ -47,7 +47,7 @@ export class CanvasService {
         (createdObjs: Object[]) => {
           if (replace) {
             this.objects = createdObjs;
-            this.reRender(projectId);
+            this.reRender();
           }
           res = createdObjs;
         },
@@ -60,7 +60,7 @@ export class CanvasService {
   }
 
   importJsonObjects(json: string) {
-    const objects = this.enliveObjcts(JSON.parse(json).objects, null, false);
+    const objects = this.enliveObjcts(JSON.parse(json).objects, null);
 
     if (!objects || !objects.length) return;
     try {
@@ -88,7 +88,7 @@ export class CanvasService {
         newGroup._objects = objects;
         this.objects = [newGroup, ...this.objects];
       }
-      this.reRender(null);
+      this.reRender();
     } catch (error) {
       alert('something went wrong');
     }
@@ -115,7 +115,7 @@ export class CanvasService {
         return obj;
       });
     }
-    this.reRender(projectId);
+    this.reRender();
     if (projectId && this.authService.auth.currentUser) {
       this.socketService.emit('objects:modified', {
         roomId: projectId,
@@ -142,7 +142,7 @@ export class CanvasService {
     });
   }
 
-  reRender(id: string | null) {
+  reRender() {
     this.objectsObserver?.next('objects');
   }
 }

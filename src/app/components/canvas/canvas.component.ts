@@ -15,6 +15,7 @@ import { LayerPanelComponent } from '../layer-panel/layer-panel.component';
 import { PropertyPanelComponent } from '../property-panel/property-panel.component';
 import { ExportComponent } from '../export/export.component';
 import { AuthService } from '../../services/auth/auth.service';
+import { DbService } from '../../services/db/db.service';
 
 @Component({
   selector: 'app-canvas',
@@ -48,6 +49,7 @@ export class CanvasComponent implements OnInit {
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
+    private dbService: DbService,
     public authService: AuthService,
     private route: ActivatedRoute
   ) {
@@ -79,12 +81,12 @@ export class CanvasComponent implements OnInit {
       });
 
       this.socketService.on('objects:modified', (new_objects) => {
-        this.canvasService.enliveObjcts(new_objects, this.id);
+        this.canvasService.enliveObjcts(new_objects, this.id,true);
         console.log('modified');
       });
 
       this.socketService.on('objects', (objects) => {
-        this.canvasService.enliveObjcts(objects, this.id);
+        this.canvasService.enliveObjcts(objects, this.id,true);
       });
       this.socketService.on('mouse:move', (data: Presense[]) => {
         this.socketService.presense = data.filter(
@@ -320,7 +322,7 @@ export class CanvasComponent implements OnInit {
       };
       if (!pen?.path || pen.isPathClosed) return;
       const { x, y } = this.canvasService.canvas!.getPointer(event.e, false);
-      this.canvasService.reRender(this.id);
+      this.canvasService.reRender();
       const start = pen.path[pen.path.length - 1] as unknown as number[];
       this.canvasService.canvas?.add(
         new fabric.Line([start[3] || start[1], start[4] || start[2], x, y], {
@@ -452,7 +454,7 @@ export class CanvasComponent implements OnInit {
       this.loadSVGFromString(this.canvasService.currentDrawingObject);
     }
     this.canvasService.currentDrawingObject = undefined;
-    this.canvasService.reRender(this.id);
+    this.canvasService.reRender();
     if (role === 'pencil') {
       this.canvasService.canvas.isDrawingMode = true;
     } else {
@@ -486,7 +488,15 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    this.id && this.socketService.emit('room:leave', this.id);
+    if (this.id) {
+      this.socketService.emit('room:leave', this.id);
+      this.dbService.updateObjects(
+        JSON.stringify(this.canvasService.canvas?.toObject().objects),
+        this.id
+      );
+
+    }
+    this.socketService.socket?.disconnect()
     this.socketService.socket?.off();
   }
 }

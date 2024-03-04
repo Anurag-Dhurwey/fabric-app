@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   Router,
   RouterLink,
@@ -10,35 +10,86 @@ import { AuthService } from '../../services/auth/auth.service';
 import { appState } from '../../store/reducers/state.reducer';
 import { Store } from '@ngrx/store';
 import { appSelector } from '../../store/selectors/app.selector';
+import { project } from '../../../types/app.types';
+import { CanvasService } from '../../services/canvas/canvas.service';
+import { fabric } from 'fabric';
+import { PreviewCardComponent } from '../preview-card/preview-card.component';
 
 @Component({
   selector: 'app-welcome',
   standalone: true,
-  imports: [RouterOutlet, RouterLinkActive, RouterLink],
+  imports: [RouterOutlet, RouterLinkActive, RouterLink, PreviewCardComponent],
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.css',
 })
-export class WelcomeComponent {
+export class WelcomeComponent implements OnInit {
   app$: appState | undefined;
   private store = inject(Store);
+  projects: project[] = [];
 
   constructor(
     public authService: AuthService,
     private router: Router,
+    public canvasService: CanvasService,
     private dbService: DbService
   ) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+  }
+
+  async ngOnInit() {
+    try {
+      this.projects = (
+        await this.dbService.getProjectsByIds([
+          '0f64ta3cL5Hj9EooDAEO',
+          'T9Y5OFz1f9musXdIAlTN',
+          'tmkbllqeaWX30brZ8Rvu',
+        ])
+      )?.map((objects: any) => {
+        if (typeof objects?.objects === 'string') {
+          objects.objects =
+            this.canvasService.enliveObjcts(
+              JSON.parse(objects.objects),
+              null
+            ) || [];
+        }
+        return objects;
+      }) as project[];
+    } catch (error) {
+      console.error(error);
+    }
+
+    // if (this.projects.length) {
+    //   this.initializeCanvases();
+    // }\
+    console.log(this.projects)
   }
 
   async signOut() {
     try {
       await this.authService.signOutUser();
       this.router.navigate(['/sign-in']);
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async createProject() {
-    const id = await this.dbService.createProject();
-    this.router.navigate([`/canvas/${id}`]);
+    try {
+      const id = await this.dbService.createProject();
+      this.router.navigate([`/canvas/${id}`]);
+    } catch (error) {
+      console.error(error);
+    }
   }
+
+  // initializeCanvases() {
+  //   this.projects = this.projects?.map((objects) => {
+  //     if (typeof objects.objects === 'string') {
+  //       objects.objects =
+  //         this.canvasService.enliveObjcts(JSON.parse(objects.objects), null) ||
+  //         [];
+  //     }
+  //     return objects;
+  //   });
+  // }
 }

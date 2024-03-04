@@ -48,7 +48,7 @@ export class LayerPanelComponent implements OnInit {
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
     }
-    this.canvasService.reRender(this.projectId);
+    this.canvasService.reRender();
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
@@ -56,7 +56,7 @@ export class LayerPanelComponent implements OnInit {
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
     }
-    this.canvasService.reRender(this.projectId);
+    this.canvasService.reRender();
   }
   setActiveSelection(e: MouseEvent, object: Object) {
     let traversed: Object[] = [];

@@ -22,8 +22,6 @@
     cursor: pointer;
     padding: 2px 6px;
     font-size: larger;
-    width: 100%;
-    height: 100%;
   }
 
   .account_menu {
@@ -167,7 +165,10 @@
         </span>
         }@else {
 
-        <button routerLink="/canvas" style="font-weight: bold">
+        <button
+          routerLink="/canvas"
+          style="font-weight: bold; width: 100%; height: 100%"
+        >
           Try without Sign-In
         </button>
         <!-- <button routerLink="/sign-in">Sign-In</button> -->
@@ -202,13 +203,19 @@
       </ul> -->
       <div class="start-explore">
         <h4>Start exploring and turn your vision into reality!</h4>
-        <button>Get Started Now</button>
+        <button routerLink="/canvas">Get Started Now</button>
       </div>
     </div>
     <div class="directry">
-      <div class="card" [style]="{ backgroundColor: 'white' }">
-        <p>empty</p>
-      </div>
+      @for (project of projects; track $index) {
+      <app-preview-card
+        class="card"
+        [style]="{ backgroundColor: 'white' }"
+        [objects]="project.objects"
+        [id]="project.id"
+        [dimension]="{ width: 250, height: 150 }"
+      />
+      }
     </div>
   </section>
 </main>

@@ -11,8 +11,9 @@ import {
   updateDoc,
   query,
   where,
+  documentId,
 } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+// import { getAnalytics } from 'firebase/analytics';
 import { environment } from '../../../environments/environment.development';
 import { SocketService } from '../socket/socket.service';
 import { Projects } from '../../../types/app.types';
@@ -23,7 +24,7 @@ import { Projects } from '../../../types/app.types';
 export class DbService {
   app;
   store;
-   auth;
+  auth;
   constructor(private socketService: SocketService) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
@@ -62,5 +63,38 @@ export class DbService {
       projects.push({ ...data, id: doc.id } as Projects);
     });
     return projects;
+  }
+
+  async getProjectsByIds(ids: string[] | string) {
+    if (typeof ids === 'string') {
+      ids = [ids];
+    }
+    try {
+      const q = query(
+        collection(this.store, 'projects'),
+        where(documentId(), 'in', ids)
+      );
+      const querySnapshot = await getDocs(q);
+
+   const data= querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      console.log({data})
+      return data
+    } catch (error) {
+      console.error('Error getting documents:', error);
+    }
+    return [];
+  }
+
+  async updateObjects(objects: string, id: string) {
+    try {
+      await updateDoc(doc(this.store, 'projects', id), {
+        objects,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 }
