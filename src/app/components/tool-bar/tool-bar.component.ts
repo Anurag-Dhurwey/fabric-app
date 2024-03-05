@@ -13,7 +13,7 @@ import { appState } from '../../store/reducers/state.reducer';
 import { appSelector } from '../../store/selectors/app.selector';
 import { CommonModule } from '@angular/common';
 import { Object } from '../../../types/app.types';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, v4 } from 'uuid';
 import {
   setCanvasConfig,
   setCanvasConfigProp,
@@ -23,6 +23,7 @@ import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { ExportComponent } from '../export/export.component';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { DbService } from '../../services/db/db.service';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
@@ -39,7 +40,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 export class ToolBarComponent {
   @Output() setCurrentAction = new EventEmitter<Roles>();
 
-
   private store = inject(Store);
   app$: appState | undefined;
   isSettingVisible: boolean = false;
@@ -50,7 +50,10 @@ export class ToolBarComponent {
     | ElementRef<HTMLInputElement>
     | undefined;
 
-  constructor(private canvasService: CanvasService) {
+  constructor(
+    private canvasService: CanvasService,
+    private dbService: DbService
+  ) {
     this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
   roles: { role: Roles; icon: string }[] = [
@@ -64,19 +67,20 @@ export class ToolBarComponent {
     { role: 'image', icon: 'image' },
   ];
 
-  onImageInput(files: FileList | null) {
+  async onImageInput(files: FileList | null) {
     if (files && files.length) {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        typeof reader.result === 'string' &&
-          fabric.Image?.fromURL(reader.result, (imgObj) => {
-            const object = imgObj as Object;
-            object._id = uuidv4();
-            this.canvasService.updateObjects(object, 'push');
-          });
+
+      const img = document.createElement('img');
+      img.onload = () => {
+        const imgInstance = new fabric.Image(img, {
+          left: 200,
+          top: 200,
+        }) as fabric.Image & { type: 'image'; _id: string };
+        imgInstance._id = v4();
+        this.canvasService.updateObjects(imgInstance, 'push');
       };
-      reader.readAsDataURL(file);
+      img.src = await this.dbService.uploadImage(file);
     }
   }
 

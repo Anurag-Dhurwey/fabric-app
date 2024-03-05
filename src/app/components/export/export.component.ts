@@ -21,7 +21,6 @@ import { setExportComponentVisibility } from '../../store/actions/state.action';
 })
 export class ExportComponent {
   private store = inject(Store);
-  // @Output() onCloseClick = new EventEmitter<any>();
   app$: appState | undefined;
   file_name = new FormControl('');
   file_type = new FormControl('jpeg');

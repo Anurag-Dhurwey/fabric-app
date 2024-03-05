@@ -73,29 +73,6 @@ export class CanvasComponent implements OnInit {
     this.id = this.route.snapshot.paramMap.get('id');
     if (this.authService.auth.currentUser && this.id) {
       this.socketService.connect();
-      this.canvasService.canvas?.on('object:moving', (event) => {
-        this.socketService.emit('objects:modified', {
-          objects: this.canvasService.canvas?.toObject().objects,
-          roomId: this.id,
-        });
-      });
-
-      this.socketService.on('objects:modified', (new_objects) => {
-        this.canvasService.enliveObjcts(new_objects, this.id,true);
-        console.log('modified');
-      });
-
-      this.socketService.on('objects', (objects) => {
-        this.canvasService.enliveObjcts(objects, this.id,true);
-      });
-      this.socketService.on('mouse:move', (data: Presense[]) => {
-        this.socketService.presense = data.filter(
-          (pre) => pre.id !== this.socketService.socket?.id
-        );
-      });
-
-      this.socketService.emit('objects', this.id);
-      this.socketService.emit('room:join', this.id);
     }
 
     const board = document.getElementById('canvas') as HTMLCanvasElement;
@@ -153,6 +130,26 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
+
+    this.canvasService.canvas?.on('object:moving', (event) => {
+      this.socketService.emit('objects:modified', {
+        objects: this.canvasService.canvas?.toObject().objects,
+        roomId: this.id,
+      });
+    });
+    this.socketService.on('objects', (objects) => {
+      this.canvasService.enliveObjcts(objects, this.id, true);
+    });
+    this.socketService.on('mouse:move', (data: Presense[]) => {
+      this.socketService.presense = data.filter(
+        (pre) => pre.id !== this.socketService.socket?.id
+      );
+    });
+    this.socketService.emit('objects', this.id);
+    this.socketService.emit('room:join', this.id);
+    this.socketService.on('objects:modified', (new_objects) => {
+      this.canvasService.enliveObjcts(new_objects, this.id, true);
+    });
   }
 
   // this updateObjects takes to arguments object and method
@@ -494,9 +491,8 @@ export class CanvasComponent implements OnInit {
         JSON.stringify(this.canvasService.canvas?.toObject().objects),
         this.id
       );
-
     }
-    this.socketService.socket?.disconnect()
+    this.socketService.socket?.disconnect();
     this.socketService.socket?.off();
   }
 }

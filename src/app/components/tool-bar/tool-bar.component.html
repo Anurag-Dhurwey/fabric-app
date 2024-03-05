@@ -110,8 +110,10 @@
 <!-- this input will be trigger when user click on image role button  -->
 <input
   type="file"
+  id="img-input"
   #fileInput
   style="display: none"
+  accept="image/*"
   (change)="onImageInput(fileInput.files)"
 />
 

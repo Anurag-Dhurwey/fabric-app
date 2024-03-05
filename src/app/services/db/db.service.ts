@@ -2,6 +2,13 @@ import { Injectable } from '@angular/core';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
+
+import {
   getFirestore,
   collection,
   addDoc,
@@ -17,6 +24,7 @@ import {
 import { environment } from '../../../environments/environment.development';
 import { SocketService } from '../socket/socket.service';
 import { Projects } from '../../../types/app.types';
+import { v4 } from 'uuid';
 
 @Injectable({
   providedIn: 'root',
@@ -25,10 +33,12 @@ export class DbService {
   app;
   store;
   auth;
+  storage;
   constructor(private socketService: SocketService) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
+    this.storage = getStorage();
   }
 
   async createProject() {
@@ -76,12 +86,12 @@ export class DbService {
       );
       const querySnapshot = await getDocs(q);
 
-   const data= querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log({data})
-      return data
+      const data = await querySnapshot.docs.map((doc) => {
+        const fot = doc.data();
+        fot['id'] = doc.id;
+        return fot;
+      });
+      return data;
     } catch (error) {
       console.error('Error getting documents:', error);
     }
@@ -96,5 +106,14 @@ export class DbService {
     } catch (error) {
       console.error(error);
     }
+  }
+  async uploadImage(img: File) {
+    const metadata = {
+      contentType: img.type,
+    };
+
+    const storageRef = ref(this.storage, 'images/' + v4());
+    const uploadTask = uploadBytesResumable(storageRef, img, metadata);
+    return await getDownloadURL(uploadTask.snapshot.ref);
   }
 }

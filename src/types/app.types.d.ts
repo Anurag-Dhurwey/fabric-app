@@ -88,5 +88,5 @@ export type project = {
   id: string;
   version: string;
   background: string;
-  objects:  Object[];
+  objects:  Object[]|string;
 };

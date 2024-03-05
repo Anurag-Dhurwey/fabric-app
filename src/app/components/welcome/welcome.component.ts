@@ -38,30 +38,14 @@ export class WelcomeComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      this.projects = (
-        await this.dbService.getProjectsByIds([
-          '0f64ta3cL5Hj9EooDAEO',
-          'T9Y5OFz1f9musXdIAlTN',
-          'tmkbllqeaWX30brZ8Rvu',
-        ])
-      )?.map((objects: any) => {
-        if (typeof objects?.objects === 'string') {
-          objects.objects =
-            this.canvasService.enliveObjcts(
-              JSON.parse(objects.objects),
-              null
-            ) || [];
-        }
-        return objects;
-      }) as project[];
+      this.projects = (await this.dbService.getProjectsByIds([
+        'R67bwQ8Dz03STMt1hfey',
+        'K3cm1DyTLghMlIVDPj55',
+      ])) as project[];
     } catch (error) {
       console.error(error);
     }
 
-    // if (this.projects.length) {
-    //   this.initializeCanvases();
-    // }\
-    console.log(this.projects)
   }
 
   async signOut() {
