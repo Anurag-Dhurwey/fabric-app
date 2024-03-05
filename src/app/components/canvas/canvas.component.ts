@@ -32,7 +32,6 @@ import { DbService } from '../../services/db/db.service';
   styleUrl: './canvas.component.css',
 })
 export class CanvasComponent implements OnInit {
-  id: string | null = null;
   title = 'fabric app';
   app$: appState | undefined;
 
@@ -70,9 +69,36 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.id = this.route.snapshot.paramMap.get('id');
-    if (this.authService.auth.currentUser && this.id) {
-      this.socketService.connect();
+    this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
+    if (this.authService.auth.currentUser && this.canvasService.projectId) {
+      this.dbService
+        .getProjectsByIds(this.canvasService.projectId)
+        .then((data: any[]) => {
+          console.log(data);
+          if (!data.length) return;
+          this.canvasService.enliveObjcts(JSON.parse(data[0].objects), true);
+          this.canvasService.members = data[0].members;
+          this.canvasService.user = data[0].user;
+          this.canvasService.background = data[0].background;
+          this.canvasService.version = data[0].version;
+          this.canvasService.currentDrawingObject = undefined;
+
+          if (
+            this.authService.auth.currentUser?.uid === data[0].user ||
+            data[0].members.includes(this.authService.auth.currentUser!.uid)
+          ) {
+            this.socketService.connect();
+            this.socketService.on('mouse:move', (data: Presense[]) => {
+              this.socketService.presense = data.filter(
+                (pre) => pre.id !== this.socketService.socket?.id
+              );
+            });
+            this.socketService.on('objects:modified', (new_objects) => {
+              this.canvasService.enliveObjcts(new_objects, true);
+            });
+            this.socketService.emit('room:join', this.canvasService.projectId);
+          }
+        });
     }
 
     const board = document.getElementById('canvas') as HTMLCanvasElement;
@@ -134,28 +160,11 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas?.on('object:moving', (event) => {
       this.socketService.emit('objects:modified', {
         objects: this.canvasService.canvas?.toObject().objects,
-        roomId: this.id,
+        roomId: this.canvasService.projectId,
       });
-    });
-    this.socketService.on('objects', (objects) => {
-      this.canvasService.enliveObjcts(objects, this.id, true);
-    });
-    this.socketService.on('mouse:move', (data: Presense[]) => {
-      this.socketService.presense = data.filter(
-        (pre) => pre.id !== this.socketService.socket?.id
-      );
-    });
-    this.socketService.emit('objects', this.id);
-    this.socketService.emit('room:join', this.id);
-    this.socketService.on('objects:modified', (new_objects) => {
-      this.canvasService.enliveObjcts(new_objects, this.id, true);
     });
   }
 
-  // this updateObjects takes to arguments object and method
-  // method could be 0 or 1
-  // if 0 then object will replace last element of this.canvasService.objects
-  // if 1 then object will be pushed to this.canvasService.objects
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
@@ -177,7 +186,7 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         this.canvasService.currentDrawingObject = obj;
-        this.canvasService.updateObjects(obj, this.id);
+        this.canvasService.updateObjects(obj, this.canvasService.projectId);
         if (obj.type === 'i-text') {
           const text = obj as fabric.IText;
           text.enterEditing();
@@ -195,7 +204,7 @@ export class CanvasComponent implements OnInit {
         toEdit.push(['Q', x, y, x, y]);
         this.canvasService.updateObjects(
           this.canvasService.currentDrawingObject,
-          this.id,
+          this.canvasService.projectId,
           'popAndPush'
         );
       } else {
@@ -203,7 +212,7 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           this.canvasService.currentDrawingObject = obj;
-          this.canvasService.updateObjects(obj, this.id);
+          this.canvasService.updateObjects(obj, this.canvasService.projectId);
         }
       }
     }
@@ -252,13 +261,13 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    if (this.id && this.authService.auth.currentUser) {
+    if (this.canvasService.projectId && this.authService.auth.currentUser) {
       this.socketService.emit('mouse:move', {
         position: {
           x: event.pointer?.x,
           y: event.pointer?.y,
         },
-        roomId: this.id,
+        roomId: this.canvasService.projectId,
       });
     }
 
@@ -306,7 +315,11 @@ export class CanvasComponent implements OnInit {
         default:
           break;
       }
-      this.canvasService.updateObjects(obj, this.id, 'popAndPush');
+      this.canvasService.updateObjects(
+        obj,
+        this.canvasService.projectId,
+        'popAndPush'
+      );
     }
     if (
       this.app$?.role === 'pen' &&
@@ -388,7 +401,7 @@ export class CanvasComponent implements OnInit {
     if (this.app$?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
-    this.canvasService.updateObjects(path, this.id);
+    this.canvasService.updateObjects(path, this.canvasService.projectId);
   }
 
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
@@ -478,20 +491,27 @@ export class CanvasComponent implements OnInit {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
       const newPath = str[0] as Object;
       newPath._id = uuidv4();
-      this.canvasService.updateObjects(newPath, this.id, 'popAndPush');
+      this.canvasService.updateObjects(
+        newPath,
+        this.canvasService.projectId,
+        'popAndPush'
+      );
       this.canvasService.currentDrawingObject = undefined;
       this.setCurrentAction('select');
     });
   }
 
   ngOnDestroy() {
-    if (this.id) {
-      this.socketService.emit('room:leave', this.id);
-      this.dbService.updateObjects(
-        JSON.stringify(this.canvasService.canvas?.toObject().objects),
-        this.id
-      );
+    if (this.canvasService.projectId) {
+      this.socketService.emit('room:leave', this.canvasService.projectId);
     }
+    this.canvasService.objects = [];
+    this.canvasService.members = [];
+    this.canvasService.projectId = null;
+    this.canvasService.background = undefined;
+    this.canvasService.version = undefined;
+    this.canvasService.user = undefined;
+    this.canvasService.currentDrawingObject = undefined;
     this.socketService.socket?.disconnect();
     this.socketService.socket?.off();
   }

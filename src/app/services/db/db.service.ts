@@ -13,12 +13,12 @@ import {
   collection,
   addDoc,
   getDocs,
-  setDoc,
   doc,
   updateDoc,
   query,
   where,
   documentId,
+  getDoc,
 } from 'firebase/firestore';
 // import { getAnalytics } from 'firebase/analytics';
 import { environment } from '../../../environments/environment.development';
@@ -47,8 +47,9 @@ export class DbService {
       const docRef = await addDoc(collection(this.store, 'projects'), {
         version: '',
         background: '',
-        objects: [],
+        objects: '',
         user: this.auth.currentUser?.uid,
+        members: [],
       });
 
       this.socketService.emit('room:join', docRef.id);

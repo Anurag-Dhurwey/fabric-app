@@ -12,6 +12,11 @@ import { AuthService } from '../auth/auth.service';
 export class CanvasService {
   canvas: fabric.Canvas | undefined;
   objects: Object[] = [];
+  projectId: string | null=null;
+  version: string | undefined;
+  background: string | undefined;
+  members: string[] = [];
+  user: string|undefined ;
   objectsObserver: Subscriber<'objects' | 'role'> | undefined;
   tempRefObj: (
     | fabric.Line
@@ -35,63 +40,52 @@ export class CanvasService {
     });
   }
 
-  enliveObjcts(
-    objects: any[],
-    projectId: string | null,
-    replace: boolean = false
-  ): Object[] | undefined {
-    let res: Object[] | undefined;
-    try {
-      fabric.util.enlivenObjects(
-        objects,
-        (createdObjs: Object[]) => {
-          if (replace) {
-            this.objects = createdObjs;
-            this.reRender();
-          }
-          res = createdObjs;
-        },
-        'fabric'
-      );
-    } catch (error) {
-      alert('something went wrong');
-    }
-    return res;
+  enliveObjcts(objects: any[], replace: boolean = false): void {
+    fabric.util.enlivenObjects(
+      objects,
+      (createdObjs: Object[]) => {
+        if (replace) {
+          this.objects = createdObjs;
+          this.reRender();
+        }
+      },
+      'fabric'
+    );
   }
 
   importJsonObjects(json: string) {
-    const objects = this.enliveObjcts(JSON.parse(json).objects, null);
+    fabric.util.enlivenObjects(
+      JSON.parse(json).objects,
+      (objects: any) => {
+        if (!objects || !objects.length) return;
+        function changeId(objects: Object[]) {
+          objects.forEach((obj) => {
+            obj._id = v4();
+            if (obj.type === 'group') {
+              obj.isMinimized = true;
+              changeId(obj._objects);
+            }
+          });
+        }
+        changeId(objects);
 
-    if (!objects || !objects.length) return;
-    try {
-      function changeId(objects: Object[]) {
-        objects.forEach((obj) => {
-          obj._id = v4();
-          if (obj.type === 'group') {
-            obj.isMinimized = true;
-            changeId(obj._objects);
-          }
-        });
-      }
-      changeId(objects);
-
-      if (objects.length === 1 && objects[0].type === 'group') {
-        this.objects = [objects[0], ...this.objects];
-      } else {
-        const newGroup = new fabric.Group([], {
-          _id: v4(),
-          top: objects[0].top,
-          left: objects[0].left,
-        } as IGroupOptions) as Group_with_series & {
-          _id: string;
-        };
-        newGroup._objects = objects;
-        this.objects = [newGroup, ...this.objects];
-      }
-      this.reRender();
-    } catch (error) {
-      alert('something went wrong');
-    }
+        if (objects.length === 1 && objects[0].type === 'group') {
+          this.objects = [objects[0], ...this.objects];
+        } else {
+          const newGroup = new fabric.Group([], {
+            _id: v4(),
+            top: objects[0].top,
+            left: objects[0].left,
+          } as IGroupOptions) as Group_with_series & {
+            _id: string;
+          };
+          newGroup._objects = objects;
+          this.objects = [newGroup, ...this.objects];
+        }
+        this.reRender();
+      },
+      'fabric'
+    );
   }
 
   updateObjects(
