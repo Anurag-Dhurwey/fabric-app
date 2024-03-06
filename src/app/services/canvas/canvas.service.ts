@@ -12,11 +12,11 @@ import { AuthService } from '../auth/auth.service';
 export class CanvasService {
   canvas: fabric.Canvas | undefined;
   objects: Object[] = [];
-  projectId: string | null=null;
+  projectId: string | null = null;
   version: string | undefined;
   background: string | undefined;
   members: string[] = [];
-  user: string|undefined ;
+  adminId: string | undefined;
   objectsObserver: Subscriber<'objects' | 'role'> | undefined;
   tempRefObj: (
     | fabric.Line
@@ -90,7 +90,6 @@ export class CanvasService {
 
   updateObjects(
     object: Object | Object[],
-    projectId: string | null,
     method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
   ) {
     if (method === 'reset' && Array.isArray(object)) {
@@ -110,12 +109,41 @@ export class CanvasService {
       });
     }
     this.reRender();
-    if (projectId && this.authService.auth.currentUser) {
-      this.socketService.emit('objects:modified', {
-        roomId: projectId,
-        objects: this.canvas?.toObject().objects,
+    // if (
+    //   this.projectId&&
+    //   this.authService.auth.currentUser &&
+    //   (this.members.includes(this.authService.auth.currentUser!.uid) ||
+    //     this.authService.auth.currentUser?.uid === this.adminId)
+    // ) {
+    this.socketService.emit('objects:modified', {
+      roomId: this.projectId,
+      objects: this.canvas?.toObject().objects,
+    });
+    // }
+  }
+
+  removeObjectsByIds(ids: string[]) {
+    const removeElements = (array: Object[]) => {
+      ids.forEach((Id) => {
+        const index = array.findIndex((element) => element._id === Id);
+        if (index !== -1) {
+          array.splice(index, 1);
+        }
       });
-    }
+
+      for (const element of array) {
+        if (element.type === 'group' && element._objects) {
+          removeElements(element._objects);
+        }
+      }
+    };
+
+    removeElements(this.objects);
+    this.reRender();
+    this.socketService.emit('objects:modified', {
+      roomId: this.projectId,
+      objects: this.canvas?.toObject().objects,
+    });
   }
 
   renderObjectsOnCanvas(backgroungColor?: string) {

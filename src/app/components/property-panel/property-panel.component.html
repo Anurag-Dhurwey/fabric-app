@@ -33,5 +33,16 @@
     }}</span>
   </h4>
   <app-commom />
+  <span
+    style="
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      column-gap: 10px;
+      padding: 10px 0px;
+    "
+  >
+    <button style="cursor: pointer;" class="material-symbols-outlined" (click)="canvasService.removeObjectsByIds([])" >delete</button>
+  </span>
   }
 </div>

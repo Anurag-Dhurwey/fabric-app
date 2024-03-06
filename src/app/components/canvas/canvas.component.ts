@@ -76,9 +76,12 @@ export class CanvasComponent implements OnInit {
         .then((data: any[]) => {
           console.log(data);
           if (!data.length) return;
-          this.canvasService.enliveObjcts(JSON.parse(data[0].objects), true);
+          this.canvasService.enliveObjcts(
+            JSON.parse(data[0].objects || '[]'),
+            true
+          );
           this.canvasService.members = data[0].members;
-          this.canvasService.user = data[0].user;
+          this.canvasService.adminId = data[0].user;
           this.canvasService.background = data[0].background;
           this.canvasService.version = data[0].version;
           this.canvasService.currentDrawingObject = undefined;
@@ -165,7 +168,6 @@ export class CanvasComponent implements OnInit {
     });
   }
 
-
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
     if (event.e.altKey) {
@@ -186,7 +188,7 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         this.canvasService.currentDrawingObject = obj;
-        this.canvasService.updateObjects(obj, this.canvasService.projectId);
+        this.canvasService.updateObjects(obj);
         if (obj.type === 'i-text') {
           const text = obj as fabric.IText;
           text.enterEditing();
@@ -204,7 +206,6 @@ export class CanvasComponent implements OnInit {
         toEdit.push(['Q', x, y, x, y]);
         this.canvasService.updateObjects(
           this.canvasService.currentDrawingObject,
-          this.canvasService.projectId,
           'popAndPush'
         );
       } else {
@@ -212,7 +213,7 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           this.canvasService.currentDrawingObject = obj;
-          this.canvasService.updateObjects(obj, this.canvasService.projectId);
+          this.canvasService.updateObjects(obj);
         }
       }
     }
@@ -317,7 +318,6 @@ export class CanvasComponent implements OnInit {
       }
       this.canvasService.updateObjects(
         obj,
-        this.canvasService.projectId,
         'popAndPush'
       );
     }
@@ -401,7 +401,7 @@ export class CanvasComponent implements OnInit {
     if (this.app$?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
-    this.canvasService.updateObjects(path, this.canvasService.projectId);
+    this.canvasService.updateObjects(path);
   }
 
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
@@ -493,7 +493,6 @@ export class CanvasComponent implements OnInit {
       newPath._id = uuidv4();
       this.canvasService.updateObjects(
         newPath,
-        this.canvasService.projectId,
         'popAndPush'
       );
       this.canvasService.currentDrawingObject = undefined;
@@ -510,7 +509,7 @@ export class CanvasComponent implements OnInit {
     this.canvasService.projectId = null;
     this.canvasService.background = undefined;
     this.canvasService.version = undefined;
-    this.canvasService.user = undefined;
+    this.canvasService.adminId = undefined;
     this.canvasService.currentDrawingObject = undefined;
     this.socketService.socket?.disconnect();
     this.socketService.socket?.off();

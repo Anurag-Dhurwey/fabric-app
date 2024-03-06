@@ -47,7 +47,7 @@ export class DbService {
       const docRef = await addDoc(collection(this.store, 'projects'), {
         version: '',
         background: '',
-        objects: '',
+        objects: '[]',
         user: this.auth.currentUser?.uid,
         members: [],
       });
