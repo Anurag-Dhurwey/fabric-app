@@ -92,7 +92,7 @@
   @if(app$?.isExportComponentVisible){
   <app-export />
   }
-  <app-layer-panel [layers]="canvasService.objects" [projectId]="canvasService.projectId" />
+  <app-layer-panel [layers]="canvasService.objects" [parentGroupIds]="[null]" [projectId]="canvasService.projectId" />
   <app-property-panel />
   @if(canvasService.projectId&&authService.auth.currentUser&& !socketService.socket?.connected){
   <div class="loader">

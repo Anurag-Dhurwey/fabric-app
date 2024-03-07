@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, HostListener, Input, OnInit } from '@angular/core';
 import {
   Group,
   Group_with_series,
@@ -22,8 +22,20 @@ import { CanvasService } from '../../services/canvas/canvas.service';
 export class LayerPanelComponent implements OnInit {
   @Input() projectId: string | null = null;
   @Input() layers: Object[] | undefined;
-
+  @Input() parentGroupIds: (string | null)[] = [];
+  changeOrder: null | {
+    from: { obj_id: string; group_id: string | null; index: number };
+    to?: { group_id: string | null; index: number };
+  } = null;
+  // canChangeOrder:boolean=false
   constructor(public canvasService: CanvasService) {}
+
+  @HostListener('window:mouseup', ['$event'])
+  mouseup(event: MouseEvent) {
+    this.changeOrderIndex();
+    this.changeOrder = null;
+    // this.canChangeOrder=false
+  }
 
   context_menu: Position | null = null;
   ngOnInit(): void {
@@ -265,5 +277,106 @@ export class LayerPanelComponent implements OnInit {
     this.canvasService.updateObjects(updatedStack, 'reset');
   }
 
+  parentGroupIdsForChild(id: string) {
+    return [...this.parentGroupIds, id];
+  }
 
+  setObjToMove(id: string, group_id: string | null, index: number) {
+    // this.canChangeOrder=true
+    this.changeOrder = {
+      from: { obj_id: id, index, group_id },
+    };
+  }
+
+  setPositionToMove(group_id: string | null, index: number) {
+    if ( this.changeOrder?.from) {
+      this.changeOrder.to = { group_id, index };
+      console.log(group_id,index)
+    }
+
+  }
+
+  changeOrderIndex() {
+    // Function to find an element or group by ID in a nested structure
+    function findElementById(
+      id: string | null,
+      array: Object[]
+    ): Object | null {
+      for (const element of array) {
+        if (element._id === id) {
+          return element;
+        }
+        if (element.type === 'group' && element._objects) {
+          const found = findElementById(id, element._objects);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null;
+    }
+
+    // Function to move elements within the nested structure
+    function moveElements(
+      data: Object[],
+      sourceIds: string[],
+      group_id: string | null,
+      targetIndex: number
+    ) {
+      const sourceElements = sourceIds
+        .map((id) => findElementById(id, data))
+        .filter((element): element is Object => element !== null);
+
+      // Remove the source elements from their original positions
+      const removeElements = (array: Object[]) => {
+        sourceIds.forEach((sourceId) => {
+          const index = array.findIndex((element) => element._id === sourceId);
+          if (index !== -1) {
+            array.splice(index, 1);
+          }
+        });
+
+        for (const element of array) {
+          if (element.type === 'group' && element._objects) {
+            removeElements(element._objects);
+          }
+        }
+      };
+
+      removeElements(data);
+
+      // Find the target element or group
+      const targetParent = findElementById(group_id, data);
+
+      // If target is a group, move the source elements to its "elements" property
+      if (targetParent?.type === 'group' && targetParent._objects) {
+        targetParent._objects.splice(targetIndex, 0, ...sourceElements);
+      } else {
+        // If target is not a group, move the source elements to the main array
+        data.splice(targetIndex, 0, ...sourceElements);
+      }
+      return data;
+    }
+
+    if (
+      this.changeOrder?.from.obj_id &&
+      this.changeOrder.to?.group_id !== undefined
+    ) {
+      const updatedStack = moveElements(
+        [...this.canvasService.objects],
+        [this.changeOrder.from.obj_id],
+        this.changeOrder.to.group_id,
+        this.changeOrder.to.index
+      );
+      this.canvasService.updateObjects(updatedStack, 'reset');
+    }
+  
+  }
+
+  isEqualToChangeOrder_to(index: number, group_id: string|null) {
+    return (
+      this.changeOrder?.to?.group_id === group_id &&
+      index === this.changeOrder.to.index
+    );
+  }
 }
