@@ -20,7 +20,6 @@ import { CanvasService } from '../../services/canvas/canvas.service';
   styleUrl: './layer-panel.component.css',
 })
 export class LayerPanelComponent implements OnInit {
-  
   @Input() projectId: string | null = null;
   @Input() layers: Object[] | undefined;
 
@@ -60,19 +59,24 @@ export class LayerPanelComponent implements OnInit {
   }
   setActiveSelection(e: MouseEvent, object: Object) {
     let traversed: Object[] = [];
+    let traversedIds: string[] = [];
     const traverse = (item: Object | Object[]) => {
       if (Array.isArray(item)) {
         item.forEach((obj) => {
           if (obj.type === 'group') {
+            traversedIds.push(obj._id);
             traverse(obj._objects);
           } else {
             traversed.push(obj);
+            traversedIds.push(obj._id);
           }
         });
       } else {
         if (item.type === 'group') {
+          traversedIds.push(item._id);
           traverse(item._objects);
         } else {
+          traversedIds.push(item._id);
           traversed.push(item);
         }
       }
@@ -84,17 +88,21 @@ export class LayerPanelComponent implements OnInit {
         | undefined;
       if (pre?.length) {
         traversed.push(...pre);
+        traversedIds.push(...this.canvasService.idsOfSelectedObj);
         if (pre.some((ele) => ele._id === object._id)) {
           traversed = traversed.filter((ele) => ele._id !== object._id);
         }
-        const ids: string[] = [];
-        traversed = traversed.filter((tra) => {
-          if (!ids.includes(tra._id)) {
-            ids.push(tra._id);
-            return true;
-          }
-          return false;
+        if (
+          this.canvasService.idsOfSelectedObj.some((id) => id === object._id)
+        ) {
+          traversedIds = traversedIds.filter((id) => id !== object._id);
+        }
+
+        traversed = traversed.filter((tra, i) => {
+          return traversed.findIndex((obj) => obj._id === tra._id) === i;
         });
+
+        traversedIds = [...new Set(traversedIds)];
       }
     }
     if (traversed.length) {
@@ -107,6 +115,7 @@ export class LayerPanelComponent implements OnInit {
           : traversed[0];
 
       this.canvasService.canvas?.setActiveObject(select);
+      this.canvasService.idsOfSelectedObj = traversedIds;
       this.canvasService.canvas?.requestRenderAll();
     } else {
       console.log('traversed' + 'is empty');
@@ -115,9 +124,16 @@ export class LayerPanelComponent implements OnInit {
   onLeftClick(e: MouseEvent, data: Object) {
     this.setActiveSelection(e, data);
   }
-  onRightClickAtLayer(e: MouseEvent) {
+  onContextClickAtLayer(e: MouseEvent, obj: Object) {
     e.preventDefault();
     this.context_menu = { x: e.clientX, y: e.clientY };
+    if (this.canvasService.idsOfSelectedObj.length) {
+      if (!this.canvasService.idsOfSelectedObj.includes(obj._id)) {
+        this.canvasService.idsOfSelectedObj = [obj._id];
+      }
+    } else {
+      this.canvasService.idsOfSelectedObj = [obj._id];
+    }
   }
 
   createGroup() {
@@ -248,4 +264,6 @@ export class LayerPanelComponent implements OnInit {
 
     this.canvasService.updateObjects(updatedStack, 'reset');
   }
+
+
 }

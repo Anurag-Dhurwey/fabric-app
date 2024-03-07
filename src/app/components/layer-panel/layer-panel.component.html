@@ -2,7 +2,7 @@
   .independent-layer {
     padding: 5px 0px;
     border: 2px solid rgb(162, 160, 160);
-    background-color: rgb(162, 160, 160);
+    /* background-color: rgb(162, 160, 160); */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -53,7 +53,16 @@
 } @for (obj of layers; track $index) { @if(obj.type==='group'){
 
 <div class="group">
-  <div class="independent-layer" style="margin-bottom: 2px;">
+  <div
+    class="independent-layer"
+    style="margin-bottom: 2px"
+    [style]="{
+      backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
+        ? 'rgb(162, 160, 100)'
+        : 'rgb(162, 160, 160)'
+    }"
+    (contextmenu)="onContextClickAtLayer($event, obj)"
+  >
     <span style="width: 15%" class="Triangle">
       <button
         (click)="
@@ -65,7 +74,7 @@
         {{ obj.isMinimized ? "expand_less" : "expand_more" }}
       </button>
     </span>
-    <span style="width: 60%" (click)="onLeftClick($event, obj)">{{
+    <span style="width: 60%; cursor: default;" (click)="onLeftClick($event, obj)">{{
       obj.type
     }}</span>
     <span style="width: 25%">
@@ -89,9 +98,14 @@
 <div
   class="independent-layer"
   (click)="onLeftClick($event, obj)"
-  (contextmenu)="onRightClickAtLayer($event)"
+  [style]="{
+    backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
+      ? 'rgb(162, 160, 100)'
+      : 'rgb(162, 160, 160)'
+  }"
+  (contextmenu)="onContextClickAtLayer($event, obj)"
 >
-  <span style="width: 75%">{{ obj.type }}</span>
+  <span style="width: 75%; cursor: default;">{{ obj.type }}</span>
   <span style="width: 25%">
     <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
       {{ obj.visible ? "visibility " : " visibility_off" }}

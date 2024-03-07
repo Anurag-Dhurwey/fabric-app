@@ -162,7 +162,7 @@ export class CanvasComponent implements OnInit {
 
     this.canvasService.canvas?.on('object:moving', (event) => {
       this.socketService.emit('objects:modified', {
-        objects: this.canvasService.canvas?.toObject().objects,
+        objects: this.canvasService.canvas?.toObject(['_id','name']).objects,
         roomId: this.canvasService.projectId,
       });
     });

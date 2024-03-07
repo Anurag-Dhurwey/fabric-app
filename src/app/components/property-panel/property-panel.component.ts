@@ -10,18 +10,26 @@ import { CanvasService } from '../../services/canvas/canvas.service';
   styleUrl: './property-panel.component.css',
 })
 export class PropertyPanelComponent {
-  constructor( public canvasService: CanvasService) {}
+  constructor(public canvasService: CanvasService) {}
   ngAfterViewInit() {
     this.canvasService.canvas?.on('selection:created', (event) => {
       if (!event.selected) return;
+      event.selected.forEach((obj: any) => {
+        this.canvasService.idsOfSelectedObj.push(obj._id)
+      });
       this.canvasService.selectedObj = event.selected;
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       if (!event.selected) return;
+      this.canvasService.idsOfSelectedObj=[]
+      event.selected.forEach((obj: any) => {
+        this.canvasService.idsOfSelectedObj.push(obj._id)
+      });
       this.canvasService.selectedObj = event.selected;
     });
     this.canvasService.canvas?.on('selection:cleared', () => {
       this.canvasService.selectedObj = [];
+      this.canvasService.idsOfSelectedObj = [];
     });
   }
 }

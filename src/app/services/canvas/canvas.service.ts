@@ -26,7 +26,7 @@ export class CanvasService {
   currentDrawingObject: Object | undefined;
 
   selectedObj: fabric.Object[] = [];
-
+  idsOfSelectedObj: string[] = [];
   constructor(
     private socketService: SocketService,
     private authService: AuthService
@@ -117,15 +117,17 @@ export class CanvasService {
     // ) {
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
-      objects: this.canvas?.toObject().objects,
+      objects: this.canvas?.toObject(['_id','name']).objects,
     });
     // }
   }
 
   removeObjectsByIds(ids: string[]) {
+    console.log(ids)
     const removeElements = (array: Object[]) => {
       ids.forEach((Id) => {
         const index = array.findIndex((element) => element._id === Id);
+        console.log(index)
         if (index !== -1) {
           array.splice(index, 1);
         }
@@ -142,8 +144,9 @@ export class CanvasService {
     this.reRender();
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
-      objects: this.canvas?.toObject().objects,
+      objects: this.canvas?.toObject(['_id','name']).objects,
     });
+    this.idsOfSelectedObj=[]
   }
 
   renderObjectsOnCanvas(backgroungColor?: string) {
