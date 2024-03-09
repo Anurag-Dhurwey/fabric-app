@@ -12,6 +12,7 @@ export type Group = fabric.Group & {
   _objects: Object[];
   type: 'group';
   isMinimized?: boolean;
+  _id: string;
 };
 
 export type Object = (
@@ -42,24 +43,6 @@ export type CommonProperty = {
   }[];
 };
 
-export type series = { series_index?: number };
-export type Group_with_series = fabric.Group & {
-  _objects: Object_with_series[];
-  type: 'group';
-  isMinimized?: boolean;
-};
-
-export type Object_with_series = (
-  | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
-  | (fabric.Line & { type: 'line' })
-  | (fabric.Rect & { type: 'rect' })
-  | (fabric.Circle & { type: 'circle' })
-  | (fabric.Image & { type: 'image' })
-  | (fabric.IText & { type: 'i-text' })
-  | Group_with_series
-) & {
-  _id: string;
-} & series;
 
 export type Projects = {
   id: string;

@@ -11,17 +11,7 @@
     height: 20px;
     min-height: 20px;
   }
-  .toMove_before::before {
-    display: block;
-    position: absolute;
-    content: "";
-    height: 3px;
-    width: 90%;
-    left: 10%;
-    background-color: aquamarine;
-    top: 0px;
-  }
-  .toMove_after::after {
+  .toMove::after {
     display: block;
     position: absolute;
     content: "";
@@ -67,23 +57,13 @@
   }
 </style>
 
-@if(layerService.context_menu){
-<app-layer-panel-context-menu
-  style="z-index: 2"
-  (onGroup)="layerService.createGroup()"
-  [position]="layerService.context_menu"
-/>
-} @for (obj of layers; track $index) { @if(obj.type==='group'){
+@for (obj of layers; track $index) { @if(obj.type==='group'){
 
 <div class="group">
   <div
     class="independent-layer {{
-      isEqualToChangeOrder_to($index, group_id)
-        ? layerService.changeOrder &&
-          canvasService.seriesIndex(obj._id) <
-            canvasService.seriesIndex(layerService.changeOrder.from.obj_id)
-          ? 'toMove_before'
-          : 'toMove_after'
+      isEqualToChangeOrder_to($index, parentGroupIds[parentGroupIds.length - 1])
+        ? 'toMove'
         : ''
     }}"
     style="margin-bottom: 2px"
@@ -92,8 +72,10 @@
         ? 'rgb(162, 160, 100)'
         : 'rgb(162, 160, 160)'
     }"
-    (contextmenu)="layerService.onContextClickAtLayer($event, obj)"
-    (mousemove)="layerService.setPositionToMove(group_id, $index)"
+    (contextmenu)="onContextClickAtLayer.emit({obj,e:$event})"
+    (mousemove)="
+     setPositionToMove.emit({group_id:parentGroupIds[parentGroupIds.length - 1], index:$index})
+    "
   >
     <span style="width: 15%" class="Triangle">
       <button
@@ -107,66 +89,65 @@
       </button>
     </span>
     <span
-      (mousedown)="layerService.setObjToMove(obj._id, group_id, $index)"
+      (mousedown)="
+        setObjToMove.emit({obj_id:obj._id,group_id: parentGroupIds[parentGroupIds.length - 1],index: $index})
+      "
       style="width: 60%; cursor: default; user-select: none"
-      (click)="layerService.onLeftClick($event, obj)"
+      (click)="onLeftClick.emit({e:$event, obj})"
       >{{ obj.type }}</span
     >
     <span style="width: 25%">
-      <button
-        class="material-symbols-outlined"
-        (click)="layerService.toggleVisibility(obj)"
-      >
+      <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
         {{ obj.visible ? "visibility " : " visibility_off" }}
       </button>
       <button
         class="material-symbols-outlined"
-        (click)="layerService.toggleControllability(obj)"
+        (click)="toggleControllability(obj)"
       >
         {{ obj.selectable ? "lock_open_right" : "lock" }}
       </button>
     </span>
   </div>
   @if(obj.isMinimized===false){
-  <app-layer-panel [layers]="obj._objects" [group_id]="obj._id" />
+  <app-layer
+    [layers]="obj._objects"
+    [parentGroupIds]="parentGroupIdsForChild(obj._id)"
+  />
   }
 </div>
 }@else {
 
 <div
   class="independent-layer {{
-    isEqualToChangeOrder_to($index, group_id)
-      ? layerService.changeOrder &&
-        canvasService.seriesIndex(obj._id) <
-          canvasService.seriesIndex(layerService.changeOrder.from.obj_id)
-        ? 'toMove_before'
-        : 'toMove_after'
+    isEqualToChangeOrder_to($index, parentGroupIds[parentGroupIds.length - 1])
+      ? 'toMove'
       : ''
   }}"
-  (click)="layerService.onLeftClick($event, obj)"
+  (click)="onLeftClick.emit({e:$event, obj})"
   [style]="{
     backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
       ? 'rgb(162, 160, 100)'
       : 'rgb(162, 160, 160)'
   }"
-  (contextmenu)="layerService.onContextClickAtLayer($event, obj)"
-  (mousemove)="layerService.setPositionToMove(group_id, $index)"
+  (contextmenu)="onContextClickAtLayer.emit({e:$event, obj})"
+  (mousemove)="
+    setPositionToMove.emit({group_id:parentGroupIds[parentGroupIds.length - 1], index:$index})
+  "
 >
   <span
-    (mousedown)="layerService.setObjToMove(obj._id, group_id, $index)"
+    (mousedown)="
+      setObjToMove.emit({obj_id:obj._id,group_id: parentGroupIds[parentGroupIds.length - 1],index: $index})
+    "
     style="width: 75%; cursor: default; user-select: none"
     >{{ obj.type }}</span
   >
   <span style="width: 25%">
-    <button
-      class="material-symbols-outlined"
-      (click)="layerService.toggleVisibility(obj)"
-    >
+    <button class="material-symbols-outlined" (click)="toggleVisibility(obj)">
       {{ obj.visible ? "visibility " : " visibility_off" }}
     </button>
     <button
       class="material-symbols-outlined"
-      (click)="layerService.toggleControllability(obj)"
+      (click)="toggleControllability(obj)"
     >
       {{ obj.selectable ? "lock_open_right" : "lock" }}
     </button>

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
 import { SocketService } from '../socket/socket.service';
 import { Observable, Subscriber } from 'rxjs';
-import { Group_with_series, Object } from '../../../types/app.types';
+import { Group,  Object } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
 import { AuthService } from '../auth/auth.service';
@@ -25,8 +25,8 @@ export class CanvasService {
 
   currentDrawingObject: Object | undefined;
 
-  selectedObj: fabric.Object[] = [];
-  idsOfSelectedObj: string[] = [];
+  selectedObj: Object[] = [];
+  // idsOfSelectedObj: string[] = [];
   constructor(
     private socketService: SocketService,
     private authService: AuthService
@@ -38,6 +38,81 @@ export class CanvasService {
         this.renderObjectsOnCanvas();
       }
     });
+  }
+
+  get idsOfSelectedObj() {
+    function traverse(obj: Object[]): string[] {
+      return obj.flatMap((ob: Object) => {
+        if (ob.type === 'group') {
+          return [ob._id, ...traverse(ob._objects)];
+        } else {
+          return [ob._id];
+        }
+      });
+    }
+
+    return traverse(this.selectedObj);
+  }
+
+  get oneArrayOfSelectedObj() {
+    function traverse(obj: Object[]): Object[] {
+      return obj.flatMap((ob: Object) => {
+        if (ob.type === 'group') {
+          return traverse(ob._objects);
+        } else {
+          return [ob];
+        }
+      });
+    }
+
+    return traverse(this.selectedObj);
+  }
+
+  isSelected(id: string) {
+    function isExist(objs: Object[]): boolean | void {
+      for (const ob of objs) {
+        if (ob.type === 'group') {
+          if (ob._id === id) {
+            return true;
+          } else {
+            return isExist(ob._objects);
+          }
+        } else {
+          if (ob._id === id) {
+            return true;
+          }
+        }
+      }
+    }
+    return !!isExist(this.selectedObj);
+  }
+
+  seriesIndex(id: string) {
+    let count = 0;
+    // let index: null | number = null;
+
+    function traverse(obj: Object): number | void {
+      if (obj._id === id) {
+        // index = count;
+        return count;
+      }
+      count += 1;
+      if (obj.type === 'group' && obj._objects) {
+        // obj._objects.forEach((subObj: Object) => {
+        //   traverse(subObj);
+        // });
+        for (const subObj of obj._objects) {
+          return traverse(subObj);
+        }
+      }
+    }
+
+    for (const obj of this.objects) {
+      const index = traverse(obj);
+      if (Number.isInteger(index)) {
+        return index;
+      }
+    }
   }
 
   enliveObjcts(objects: any[], replace: boolean = false): void {
@@ -76,9 +151,7 @@ export class CanvasService {
             _id: v4(),
             top: objects[0].top,
             left: objects[0].left,
-          } as IGroupOptions) as Group_with_series & {
-            _id: string;
-          };
+          } as IGroupOptions) as Group
           newGroup._objects = objects;
           this.objects = [newGroup, ...this.objects];
         }
@@ -117,17 +190,17 @@ export class CanvasService {
     // ) {
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
-      objects: this.canvas?.toObject(['_id','name']).objects,
+      objects: this.canvas?.toObject(['_id', 'name']).objects,
     });
     // }
   }
 
   removeObjectsByIds(ids: string[]) {
-    console.log(ids)
+    console.log(ids);
     const removeElements = (array: Object[]) => {
       ids.forEach((Id) => {
         const index = array.findIndex((element) => element._id === Id);
-        console.log(index)
+        console.log(index);
         if (index !== -1) {
           array.splice(index, 1);
         }
@@ -144,9 +217,9 @@ export class CanvasService {
     this.reRender();
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
-      objects: this.canvas?.toObject(['_id','name']).objects,
+      objects: this.canvas?.toObject(['_id', 'name']).objects,
     });
-    this.idsOfSelectedObj=[]
+    // this.idsOfSelectedObj = [];
   }
 
   renderObjectsOnCanvas(backgroungColor?: string) {

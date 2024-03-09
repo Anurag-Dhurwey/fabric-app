@@ -15,21 +15,24 @@ export class PropertyPanelComponent {
     this.canvasService.canvas?.on('selection:created', (event) => {
       if (!event.selected) return;
       event.selected.forEach((obj: any) => {
-        this.canvasService.idsOfSelectedObj.push(obj._id)
+        if (!this.canvasService.isSelected(obj._id)) {
+          this.canvasService.selectedObj.push(obj);
+        }
       });
-      this.canvasService.selectedObj = event.selected;
+      console.log(this.canvasService.selectedObj);
+      // this.canvasService.selectedObj = event.selected;
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       if (!event.selected) return;
-      this.canvasService.idsOfSelectedObj=[]
+      this.canvasService.selectedObj = [];
       event.selected.forEach((obj: any) => {
-        this.canvasService.idsOfSelectedObj.push(obj._id)
+        this.canvasService.selectedObj.push(obj);
       });
-      this.canvasService.selectedObj = event.selected;
+      // this.canvasService.selectedObj = event.selected;
     });
     this.canvasService.canvas?.on('selection:cleared', () => {
       this.canvasService.selectedObj = [];
-      this.canvasService.idsOfSelectedObj = [];
+      // this.canvasService.idsOfSelectedObj = [];
     });
   }
 }

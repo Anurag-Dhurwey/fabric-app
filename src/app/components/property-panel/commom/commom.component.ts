@@ -129,7 +129,7 @@ export class CommomComponent {
     const target = event.target as HTMLInputElement;
     const value = this.extractValueFromTarget(target);
     if (value !== null && this.canvasService.selectedObj?.length === 1) {
-      this.canvasService.selectedObj.forEach(obj=>{
+      this.canvasService.selectedObj.forEach((obj:fabric.Object)=>{
         obj.set(
           target.name as keyof fabric.Object,
           value
