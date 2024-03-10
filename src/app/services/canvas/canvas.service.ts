@@ -26,7 +26,6 @@ export class CanvasService {
   currentDrawingObject: Object | undefined;
 
   selectedObj: Object[] = [];
-  // idsOfSelectedObj: string[] = [];
   constructor(
     private socketService: SocketService,
     private authService: AuthService
@@ -40,19 +39,45 @@ export class CanvasService {
     });
   }
 
-  // private ExtractIds(obj: Object[]){
-  //   function traverse(obj: Object[]): string[] {
-  //     return obj.flatMap((ob: Object) => {
-  //       if (ob.type === 'group') {
-  //         return [ob._id, ...traverse(ob._objects)];
-  //       } else {
-  //         return [ob._id];
-  //       }
-  //     });
-  //   }
+removeEmptyGroups(objects:Object[]){
+  return  objects.flatMap(obj=>{
+    if(obj.type==='group' ){
+     if(obj._objects.length){
+      obj._objects=this.removeEmptyGroups(obj._objects)
+      return [obj]
+     }else{
+      return [] as Object[]
+     }
+    }
+    return [obj]
+  })
+}
 
-  //   return traverse(obj);
-  // }
+  countChildsLength(id: string) {
+    function traverse(obj: Object): number | undefined {
+      if (obj.type === 'group') {
+        if (id === obj._id) {
+          return obj._objects.length;
+        }
+
+        for (const subObj of obj._objects) {
+          const length = traverse(subObj);
+          if (Number.isInteger(length)) {
+            return length;
+          }
+        }
+      }
+      return undefined;
+    }
+
+    for (const obj of this.objects) {
+      const length = traverse(obj);
+      if (Number.isInteger(length)) {
+        return length;
+      }
+    }
+    return undefined;
+  }
 
   get idsOfSelectedObj() {
     function traverse(obj: Object[]): string[] {
@@ -96,23 +121,29 @@ export class CanvasService {
     return traverse(objects);
   }
 
-  isSelected(id: string) {
-    function isExist(objs: Object[]): boolean | void {
-      for (const ob of objs) {
-        if (ob.type === 'group') {
-          if (ob._id === id) {
-            return true;
-          } else {
-            return isExist(ob._objects);
-          }
-        } else {
-          if (ob._id === id) {
-            return true;
+  isSelected(id: string):boolean {
+    function isExist(obj: Object): boolean  {
+      if(obj._id===id){
+        return true
+      }
+      if(obj.type==='group'){
+        for (const subObj of obj._objects) {
+          const res= isExist(subObj)
+          if(res){
+            return true
           }
         }
       }
+      return false
     }
-    return !!isExist(this.selectedObj);
+
+    for (const obj of this.selectedObj) {
+      const res= isExist(obj)
+      if(res){
+        return true
+      }
+    }
+    return false
   }
 
   seriesIndex(id: string, text?: string) {
@@ -225,12 +256,12 @@ export class CanvasService {
     // }
   }
 
-   removeElements = (array: Object[], ids: string[]) => {
+  removeElements = (array: Object[], ids: string[]) => {
     ids.forEach((Id) => {
       const index = array.findIndex((element) => element._id === Id);
       if (index !== -1) {
         array.splice(index, 1);
-        console.log(Id,' ', 'deleted')
+        console.log(Id, ' ', 'deleted');
       }
     });
 
@@ -239,14 +270,11 @@ export class CanvasService {
         this.removeElements(element._objects, ids);
       }
     }
-    
   };
-
-  
 
   filterSelectedObjByIds(ids: string[]) {
     this.removeElements(this.selectedObj, ids);
-    console.log(this.selectedObj)
+    console.log(this.selectedObj);
   }
 
   filterObjectsByIds(ids: string[]) {

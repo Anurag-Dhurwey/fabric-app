@@ -50,12 +50,14 @@ export class LayerService {
       if (!this.canvasService.isSelected(object._id)) {
         const ids = CanvasService.extractIds([object]);
         this.canvasService.filterSelectedObjByIds(ids);
-        const pre = [...this.canvasService.selectedObj];
+        let pre = [...this.canvasService.selectedObj];
+        pre = this.canvasService.removeEmptyGroups(pre);
         this.canvasService.canvas?.discardActiveObject();
         this.canvasService.selectedObj = [object, ...pre];
       } else {
-        this.canvasService.filterSelectedObjByIds( [object._id]);
-        const pre = [...this.canvasService.selectedObj];
+        this.canvasService.filterSelectedObjByIds([object._id]);
+        let pre = [...this.canvasService.selectedObj];
+        pre = this.canvasService.removeEmptyGroups(pre);
         this.canvasService.canvas?.discardActiveObject();
         this.canvasService.selectedObj = [...pre];
         // this.canvasService.canvas?.discardActiveObject();
@@ -77,14 +79,20 @@ export class LayerService {
       );
       this.canvasService.canvas?.setActiveObject(select);
       // this.canvasService.canvas?.requestRenderAll();
-    }else{
+    } else {
       this.canvasService.canvas?.discardActiveObject();
     }
     this.canvasService.canvas?.requestRenderAll();
-    console.log(this.canvasService.selectedObj)
+    console.log(this.canvasService.selectedObj);
   }
-  onLeftClick(e: MouseEvent, data: Object) {
-    this.setActiveSelection(e, data);
+  onLeftClick(e: MouseEvent, data: Object,groupId:null|string) {
+    if(e.ctrlKey&& this.canvasService.isSelected(groupId||'')){
+      console.log(groupId)
+      return
+    }else{
+
+      this.setActiveSelection(e, data);
+    }
   }
 
   createGroup() {
@@ -178,7 +186,6 @@ export class LayerService {
   }
 
   setObjToMove(id: string, group_id: string | null, index: number) {
-    // this.canChangeOrder=true
     this.changeOrder = {
       from: { obj_id: id, index, group_id },
     };
@@ -270,11 +277,9 @@ export class LayerService {
     this.context_menu = { x: e.clientX, y: e.clientY };
     if (this.canvasService.selectedObj.length) {
       if (!this.canvasService.idsOfSelectedObj.includes(obj._id)) {
-        // this.canvasService.idsOfSelectedObj = [obj._id];
         this.setActiveSelection(e, obj);
       }
     } else {
-      // this.canvasService.idsOfSelectedObj = [obj._id];
       this.setActiveSelection(e, obj);
     }
   }

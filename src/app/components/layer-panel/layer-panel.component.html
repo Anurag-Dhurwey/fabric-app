@@ -109,7 +109,7 @@
     <span
       (mousedown)="layerService.setObjToMove(obj._id, group_id, $index)"
       style="width: 60%; cursor: default; user-select: none"
-      (click)="layerService.onLeftClick($event, obj)"
+      (click)="layerService.onLeftClick($event, obj,group_id)"
       >{{ obj.type }}</span
     >
     <span style="width: 25%">
@@ -143,7 +143,7 @@
         : 'toMove_after'
       : ''
   }}"
-  (click)="layerService.onLeftClick($event, obj)"
+  (click)="layerService.onLeftClick($event, obj,group_id)"
   [style]="{
     backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
       ? 'rgb(162, 160, 100)'
