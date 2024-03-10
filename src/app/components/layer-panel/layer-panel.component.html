@@ -80,8 +80,8 @@
     class="independent-layer {{
       isEqualToChangeOrder_to($index, group_id)
         ? layerService.changeOrder &&
-          canvasService.seriesIndex(obj._id) <
-            canvasService.seriesIndex(layerService.changeOrder.from.obj_id)
+          canvasService.seriesIndex(obj._id)! <
+            canvasService.seriesIndex(layerService.changeOrder.from.obj_id)!
           ? 'toMove_before'
           : 'toMove_after'
         : ''
@@ -137,8 +137,8 @@
   class="independent-layer {{
     isEqualToChangeOrder_to($index, group_id)
       ? layerService.changeOrder &&
-        canvasService.seriesIndex(obj._id) <
-          canvasService.seriesIndex(layerService.changeOrder.from.obj_id)
+        canvasService.seriesIndex(obj._id)! <
+          canvasService.seriesIndex(layerService.changeOrder.from.obj_id)!
         ? 'toMove_before'
         : 'toMove_after'
       : ''

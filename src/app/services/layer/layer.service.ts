@@ -47,16 +47,27 @@ export class LayerService {
 
   setActiveSelection(e: MouseEvent, object: Object) {
     if (e.ctrlKey) {
-      const pre = [...this.canvasService.selectedObj];
-      this.canvasService.canvas?.discardActiveObject();
-      this.canvasService.selectedObj.push(object, ...pre);
+      if (!this.canvasService.isSelected(object._id)) {
+        const ids = CanvasService.extractIds([object]);
+        this.canvasService.filterSelectedObjByIds(ids);
+        const pre = [...this.canvasService.selectedObj];
+        this.canvasService.canvas?.discardActiveObject();
+        this.canvasService.selectedObj = [object, ...pre];
+      } else {
+        this.canvasService.filterSelectedObjByIds( [object._id]);
+        const pre = [...this.canvasService.selectedObj];
+        this.canvasService.canvas?.discardActiveObject();
+        this.canvasService.selectedObj = [...pre];
+        // this.canvasService.canvas?.discardActiveObject();
+      }
     } else {
+      this.canvasService.canvas?.discardActiveObject();
       this.canvasService.selectedObj = [object];
     }
     if (this.canvasService.oneArrayOfSelectedObj.length === 1) {
       const select = this.canvasService.oneArrayOfSelectedObj[0];
       this.canvasService.canvas?.setActiveObject(select);
-      this.canvasService.canvas?.requestRenderAll();
+      // this.canvasService.canvas?.requestRenderAll();
     } else if (this.canvasService.oneArrayOfSelectedObj.length > 1) {
       const select = new fabric.ActiveSelection(
         this.canvasService.oneArrayOfSelectedObj,
@@ -65,8 +76,12 @@ export class LayerService {
         }
       );
       this.canvasService.canvas?.setActiveObject(select);
-      this.canvasService.canvas?.requestRenderAll();
+      // this.canvasService.canvas?.requestRenderAll();
+    }else{
+      this.canvasService.canvas?.discardActiveObject();
     }
+    this.canvasService.canvas?.requestRenderAll();
+    console.log(this.canvasService.selectedObj)
   }
   onLeftClick(e: MouseEvent, data: Object) {
     this.setActiveSelection(e, data);
@@ -114,14 +129,15 @@ export class LayerService {
       if (!selectedElements.length) return rootArray;
       // Remove selected elements from their original positions
       const newGroupId = v4();
-
+      console.log({ selectedElements });
       // const newRoot = add_series_Property(rootArray);
       // Calculate the series index for the new group
       let indexes = selectedElements.map((element) => {
-        return this.canvasService.seriesIndex(element._id) as number;
+        return this.canvasService.seriesIndex(element._id, 'indexes') as number;
       });
       // indexes=indexes.filter(num=>Number.isInteger(num))
       const seriesIndex = Math.min(...indexes);
+      console.log(indexes);
       // console.log(selectedElements[0].left,selectedElements[0].top)
       const newGroup = new fabric.Group([], {
         _id: newGroupId,
@@ -136,7 +152,7 @@ export class LayerService {
             element._objects = insertGroup(element._objects);
           }
           if (this.canvasService.seriesIndex(element._id) === seriesIndex) {
-            console.log('done');
+            console.log('done', ' ', [newGroup]);
             return [newGroup, element];
           } else {
             return [element];
@@ -154,8 +170,8 @@ export class LayerService {
     };
     if (!this.canvasService.objects) return;
     const updatedStack = createAndInsertGroup(
-      this.canvasService.objects,
-      this.canvasService.selectedObj
+      [...this.canvasService.objects],
+      [...this.canvasService.selectedObj]
     );
 
     this.canvasService.updateObjects(updatedStack, 'reset');
@@ -171,7 +187,6 @@ export class LayerService {
   setPositionToMove(group_id: string | null, index: number) {
     if (this.changeOrder?.from) {
       this.changeOrder.to = { group_id, index };
-      console.log(group_id, index);
     }
   }
 

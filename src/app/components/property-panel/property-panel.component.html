@@ -42,7 +42,15 @@
       padding: 10px 0px;
     "
   >
-    <button style="cursor: pointer;" class="material-symbols-outlined" (click)="canvasService.removeObjectsByIds([])" >delete</button>
+    <button
+      style="cursor: pointer"
+      class="material-symbols-outlined"
+      (click)="
+        canvasService.filterObjectsByIds([canvasService.selectedObj[0]._id])
+      "
+    >
+      delete
+    </button>
   </span>
   }
 </div>

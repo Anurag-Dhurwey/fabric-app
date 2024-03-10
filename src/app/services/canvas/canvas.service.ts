@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
 import { SocketService } from '../socket/socket.service';
 import { Observable, Subscriber } from 'rxjs';
-import { Group,  Object } from '../../../types/app.types';
+import { Group, Object } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
 import { AuthService } from '../auth/auth.service';
@@ -40,6 +40,20 @@ export class CanvasService {
     });
   }
 
+  // private ExtractIds(obj: Object[]){
+  //   function traverse(obj: Object[]): string[] {
+  //     return obj.flatMap((ob: Object) => {
+  //       if (ob.type === 'group') {
+  //         return [ob._id, ...traverse(ob._objects)];
+  //       } else {
+  //         return [ob._id];
+  //       }
+  //     });
+  //   }
+
+  //   return traverse(obj);
+  // }
+
   get idsOfSelectedObj() {
     function traverse(obj: Object[]): string[] {
       return obj.flatMap((ob: Object) => {
@@ -68,6 +82,20 @@ export class CanvasService {
     return traverse(this.selectedObj);
   }
 
+  static extractIds(objects: Object[]) {
+    function traverse(obj: Object[]): string[] {
+      return obj.flatMap((ob: Object) => {
+        if (ob.type === 'group') {
+          return [ob._id, ...traverse(ob._objects)];
+        } else {
+          return [ob._id];
+        }
+      });
+    }
+
+    return traverse(objects);
+  }
+
   isSelected(id: string) {
     function isExist(objs: Object[]): boolean | void {
       for (const ob of objs) {
@@ -87,24 +115,25 @@ export class CanvasService {
     return !!isExist(this.selectedObj);
   }
 
-  seriesIndex(id: string) {
+  seriesIndex(id: string, text?: string) {
     let count = 0;
-    // let index: null | number = null;
-
-    function traverse(obj: Object): number | void {
-      if (obj._id === id) {
-        // index = count;
+    function traverse(
+      obj: Object & { series_index?: number }
+    ): number | undefined {
+      if (id === obj._id) {
         return count;
       }
       count += 1;
+
       if (obj.type === 'group' && obj._objects) {
-        // obj._objects.forEach((subObj: Object) => {
-        //   traverse(subObj);
-        // });
         for (const subObj of obj._objects) {
-          return traverse(subObj);
+          const index = traverse(subObj);
+          if (Number.isInteger(index)) {
+            return index;
+          }
         }
       }
+      return undefined;
     }
 
     for (const obj of this.objects) {
@@ -113,6 +142,7 @@ export class CanvasService {
         return index;
       }
     }
+    return undefined;
   }
 
   enliveObjcts(objects: any[], replace: boolean = false): void {
@@ -151,7 +181,7 @@ export class CanvasService {
             _id: v4(),
             top: objects[0].top,
             left: objects[0].left,
-          } as IGroupOptions) as Group
+          } as IGroupOptions) as Group;
           newGroup._objects = objects;
           this.objects = [newGroup, ...this.objects];
         }
@@ -195,25 +225,32 @@ export class CanvasService {
     // }
   }
 
-  removeObjectsByIds(ids: string[]) {
-    console.log(ids);
-    const removeElements = (array: Object[]) => {
-      ids.forEach((Id) => {
-        const index = array.findIndex((element) => element._id === Id);
-        console.log(index);
-        if (index !== -1) {
-          array.splice(index, 1);
-        }
-      });
-
-      for (const element of array) {
-        if (element.type === 'group' && element._objects) {
-          removeElements(element._objects);
-        }
+   removeElements = (array: Object[], ids: string[]) => {
+    ids.forEach((Id) => {
+      const index = array.findIndex((element) => element._id === Id);
+      if (index !== -1) {
+        array.splice(index, 1);
+        console.log(Id,' ', 'deleted')
       }
-    };
+    });
 
-    removeElements(this.objects);
+    for (const element of array) {
+      if (element.type === 'group' && element._objects) {
+        this.removeElements(element._objects, ids);
+      }
+    }
+    
+  };
+
+  
+
+  filterSelectedObjByIds(ids: string[]) {
+    this.removeElements(this.selectedObj, ids);
+    console.log(this.selectedObj)
+  }
+
+  filterObjectsByIds(ids: string[]) {
+    this.removeElements(this.objects, ids);
     this.reRender();
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
